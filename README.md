@@ -1,6 +1,6 @@
 # Muon
 
-Muon is a modern low-level programming language, inspired by C, C#, Rust, Go and Python.
+Muon is a modern low-level programming language, inspired by C, C#, Go, Rust and Python.
 
 ## Design principles
 
@@ -25,7 +25,7 @@ Muon is a modern low-level programming language, inspired by C, C#, Rust, Go and
 	- Generics.
 	- Order independent declarations.
 	- Newline as statement separator. 
-	- [Uniform function call syntax](https://en.wikipedia.org/wiki/Uniform_Function_Call_Syntax).
+	- [Uniform function call syntax](docs/muon_by_example.md#ufcs).
 	- Reference type notation.
 	- Namespaces.
 
