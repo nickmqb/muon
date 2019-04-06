@@ -4,4 +4,4 @@
 ../lib/memory.mu
 ../lib/random.mu
 guessing_game.mu
---output_file guessing_game.c
+--output-file guessing_game.c

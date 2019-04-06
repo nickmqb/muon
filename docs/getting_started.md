@@ -23,7 +23,7 @@
 ### Building and running: hello_world
 
 1. Navigate to the `examples` directory.
-2. Run `mu ../lib/core.mu hello_world.mu --output_file hello_world.c` (the first two arguments are Muon source files).
+2. Run `mu ../lib/core.mu hello_world.mu --output-file hello_world.c` (the first two arguments are Muon source files).
 3. The compiler has generated hello_world.c. Use a C compiler to build, e.g.:
 	* GCC: `gcc -m32 -o hello_world hello_world.c`
 	* MSVC (assuming 32-bit environment): `cl hello_world.c` 

@@ -68,9 +68,9 @@ namespace MuonInterpreter {
                 "demo/demo6.mu",
             }.Select(p => Root + p)).Concat(new[] {
                 "--args", Root + "vc_demo/demo.args",
-                "--max_errors", "100",
-                "--output_file", Root + "vc_demo/demo.c",
-                "--run_command", "[[demo.exe 13579]]",
+                "--max-errors", "100",
+                "--output-file", Root + "vc_demo/demo.c",
+                "--run-command", "[[demo.exe 13579]]",
             }).ToArray();
 
             RunMain(program, args);

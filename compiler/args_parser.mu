@@ -81,20 +81,20 @@ ArgsParser {
 		while s.token != "" {
 			if s.token == "--args" {
 				parseArgsFile(s)
-			} else if s.token == "--include_file" {
+			} else if s.token == "--include-file" {
 				parseIncludeFile(s)
-			} else if s.token == "--output_file" {
+			} else if s.token == "--output-file" {
 				parseOutputFile(s)
-			} else if s.token == "--no_entry_point" {
+			} else if s.token == "--no-entry-point" {
 				s.result.noEntryPoint = true
 				readToken(s)
-			} else if s.token == "--build_command" {
+			} else if s.token == "--build-command" {
 				parseBuildCommand(s)
-			} else if s.token == "--run_command" {
+			} else if s.token == "--run-command" {
 				parseRunCommand(s)
-			} else if s.token == "--max_errors" {
+			} else if s.token == "--max-errors" {
 				parseMaxErrors(s)
-			} else if s.token == "--print_stats" {
+			} else if s.token == "--print-stats" {
 				s.result.printStats = true
 				readToken(s)
 			} else if s.token == "--version" {

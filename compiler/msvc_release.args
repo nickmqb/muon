@@ -20,9 +20,9 @@ c_generator_builtin.mu
 args_parser.mu
 cpu_time_stopwatch_windows.mu
 mu.mu
---output_file mu_release.c
---include_file external_windows.h
---build_command [[
+--output-file mu_release.c
+--include-file external_windows.h
+--build-command [[
 ""C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl.exe"
 	/X
 	/Y-

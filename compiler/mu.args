@@ -20,4 +20,4 @@ c_generator_builtin.mu
 args_parser.mu
 cpu_time_stopwatch.mu
 mu.mu
---output_file mu.c
+--output-file mu.c
