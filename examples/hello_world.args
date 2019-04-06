@@ -1,0 +1,3 @@
+../lib/core.mu
+hello_world.mu
+--output_file hello_world.c

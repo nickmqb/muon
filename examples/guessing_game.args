@@ -1,0 +1,7 @@
+../lib/core.mu
+../lib/basic.mu
+../lib/stdio.mu
+../lib/memory.mu
+../lib/random.mu
+guessing_game.mu
+--output_file guessing_game.c

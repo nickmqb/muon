@@ -1,0 +1,8 @@
+../lib/core.mu
+../lib/basic.mu
+../lib/containers.mu
+../lib/stdio.mu
+../lib/memory.mu
+../lib/string.mu
+word_count.mu
+--output_file word_count.c
