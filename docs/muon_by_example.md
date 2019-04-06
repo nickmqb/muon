@@ -43,7 +43,7 @@ Some observations:
 
 * Comments are marked with `//`.
 * `main()` is the entry point of the program
-* The `::` operator is used to access a member of the global namespace. `::currentAllocator` refers to the allocator for the current thread, which is defined in [`lib/core.mu`](lib/core.mu).
+* The `::` operator is used to access a member of the global namespace. `::currentAllocator` refers to the allocator for the current thread, which is defined in [`lib/core.mu`](../lib/core.mu).
 * `:=` is used to declare local variables; the type of the local variable is always inferred (and does not need to be specified)
 * `if`, `else`, `while`, `break`, `continue` work like they do in most other imperative languages.
 * The `.` operator is used for two purposes. The first one is struct field access, e.g. in `input.value`. The second one is namespace member access, e.g. in `Random.xorshift32` (`Random` is the namespace, `xorshift32` is the member).
@@ -406,7 +406,7 @@ Note: this is an experimental feature.
 
 ## Error handling, abandonment
 
-Muon provides two ways to handle errors. The first option is via return values. The standard library provides `Maybe<T>` and `Result<T>` to help with this (see [`lib/basic.mu`](lib/basic.mu), where these are defined).
+Muon provides two ways to handle errors. The first option is via return values. The standard library provides `Maybe<T>` and `Result<T>` to help with this (see [`lib/basic.mu`](../lib/basic.mu), where these are defined).
 
 The second option is [abandonment](http://joeduffyblog.com/2016/02/07/the-error-model/). Abandonment means: giving up, and potentially letting the program recover at a high level. There are multiple ways in which abandonment can be triggered:
 
@@ -578,14 +578,14 @@ The files that comprise the standard library are listed below. People that want 
 
 File | Description
 -----|-------------
-[`lib/core.mu`](lib/core.mu) | Core type declarations. The only file that's always required.
-[`lib/basic.mu`](lib/basic.mu) | String conversion functions, `StringBuilder`, `Maybe<T>`, `Result<T>`.
-[`lib/containers.mu`](lib/containers.mu) | `Array<T>`, `List<T>`, `Set<T>`, `Map<K, V>`, `CustomSet<T>`, `CustomMap<K, V>`.
-[`lib/string.mu`](lib/string.mu) | Various string functions.
-[`lib/memory.mu`](lib/memory.mu) | `Memory.heapAllocator`, `ArenaAllocator`.
-[`lib/sort.mu`](lib/sort.mu) | Basic merge sort implementation.
-[`lib/stdio.mu`](lib/stdio.mu) | `Stdout`, `Stdin`, very basic file I/O.
-[`lib/random.mu`](lib/random.mu) | Very basic random number generator. 
+[`lib/core.mu`](../lib/core.mu) | Core type declarations. The only file that's always required.
+[`lib/basic.mu`](../lib/basic.mu) | String conversion functions, `StringBuilder`, `Maybe<T>`, `Result<T>`.
+[`lib/containers.mu`](../lib/containers.mu) | `Array<T>`, `List<T>`, `Set<T>`, `Map<K, V>`, `CustomSet<T>`, `CustomMap<K, V>`.
+[`lib/string.mu`](../lib/string.mu) | Various string functions.
+[`lib/memory.mu`](../lib/memory.mu) | `Memory.heapAllocator`, `ArenaAllocator`.
+[`lib/sort.mu`](../lib/sort.mu) | Basic merge sort implementation.
+[`lib/stdio.mu`](../lib/stdio.mu) | `Stdout`, `Stdin`, very basic file I/O.
+[`lib/random.mu`](../lib/random.mu) | Very basic random number generator. 
 
 ## Arrays and lists
 
@@ -643,7 +643,7 @@ File | Description
 		}
 	}
 
-The standard library provides arrays and lists, which are defined in [`lib/containers.mu`](lib/containers.mu). Arrays and lists can be indexed using `[` and `]`. Indices are zero based. If the index is out of bounds, the program is abandoned. To avoid the bounds check, the builtin `unchecked_index` can be used.
+The standard library provides arrays and lists, which are defined in [`lib/containers.mu`](../lib/containers.mu). Arrays and lists can be indexed using `[` and `]`. Indices are zero based. If the index is out of bounds, the program is abandoned. To avoid the bounds check, the builtin `unchecked_index` can be used.
 
 Both arrays and lists can be sliced, producing an array.
 
@@ -677,7 +677,7 @@ All container types (including sets and maps, see below) can be iterated over us
 		}
 	}
 
-The standard library provides two set and two map implementations: `Set<T>`, `CustomSet<T>`, `Map<K, V>` and `CustomMap<K, V>`. See [`lib/containers.mu`](lib/containers.mu), where these types are defined, for a list of all functions that are provided. All of these types are backed by hash tables. `Set` and `Map` use the item/key type's `hash` and `equals ` functions, whereas `CustomSet` and `CustomMap` support the use of custom hash and equals functions. 
+The standard library provides two set and two map implementations: `Set<T>`, `CustomSet<T>`, `Map<K, V>` and `CustomMap<K, V>`. See [`lib/containers.mu`](../lib/containers.mu), where these types are defined, for a list of all functions that are provided. All of these types are backed by hash tables. `Set` and `Map` use the item/key type's `hash` and `equals ` functions, whereas `CustomSet` and `CustomMap` support the use of custom hash and equals functions. 
 
 ## Next steps
 
