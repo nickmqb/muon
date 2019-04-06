@@ -3,6 +3,14 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Extension-less files (binaries)
+*
+!*.*
+!*/
+
+# Windows binaries
+**/*.exe
+
 # User-specific files
 *.suo
 *.user
@@ -328,3 +336,7 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+# Generated C files
+compiler/*.c
+examples/*.c
