@@ -1,0 +1,44 @@
+../lib/core.mu
+../lib/basic.mu
+../lib/containers.mu
+../lib/string.mu
+../lib/environment.mu
+../lib/memory.mu
+../lib/stdio.mu
+../lib/sort.mu
+ast.mu
+ast_printer.mu
+range_finder.mu
+type_checker_first_pass.mu
+type_checker.mu
+type_checker_builtin.mu
+parser.mu
+expander.mu
+interpreter.mu
+c_generator.mu
+c_generator_builtin.mu
+args_parser.mu
+cpu_time_stopwatch_windows.mu
+mu.mu
+--output_file mu_release.c
+--include_file external_windows.h
+--build_command [[
+""C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl.exe"
+	/X
+	/Y-
+	/I"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include"
+	/I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt"
+	/I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared"
+	/I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um"
+	mu_release.c
+	/TC
+	/Zi
+	/MD
+	/Ox
+	/Gw
+	/link
+	/LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\lib\x86"
+	/LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x86"
+	/LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x86"
+	/NOLOGO"
+]]
