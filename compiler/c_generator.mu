@@ -1324,6 +1324,14 @@ CGenerator {
 			genLiftingBinaryOperator(c, op, e.lhs, e.rhs, sb, uni)
 		} else if (lhs.ti.flags & TypeFlags.pointer_) != 0 {
 			genBasicBinaryOperator(c, op, e, sb)
+		} else if lhs.ti == c.tags.char_.ti {
+			sb.write("((unsigned char)(")
+			genExpression(c, e.lhs, sb)
+			sb.write(")) ")
+			sb.write(op)
+			sb.write(" ((unsigned char)(")
+			genExpression(c, e.rhs, sb)
+			sb.write("))")
 		} else if lhs.ti == c.tags.string_.ti {
 			sb.write("string__compare__(")
 			genExpression(c, e.lhs, sb)

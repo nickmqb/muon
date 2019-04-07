@@ -388,7 +388,11 @@ CGenerator {
 		if (from.ti.flags & (TypeFlags.anyPointerExceptTaggedPointer | TypeFlags.char_)) != 0 && (to.ti.flags & TypeFlags.intval) != 0 {
 			rb.write("(")
 			writeTag(rb, to)
-			rb.write(")(uintptr_t)(")
+			if (from.ti.flags & (TypeFlags.char_)) != 0 {
+				rb.write(")(unsigned char)(")
+			} else {
+				rb.write(")(uintptr_t)(")
+			}
 			genExpression(c, e.args[0], rb)
 			rb.write(")")
 			return
