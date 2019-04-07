@@ -48,7 +48,19 @@ Some observations:
 * `if`, `else`, `while`, `break`, `continue` work like they do in most other imperative languages.
 * The `.` operator is used for two purposes. The first one is struct field access, e.g. in `input.value`. The second one is namespace member access, e.g. in `Random.xorshift32` (`Random` is the namespace, `xorshift32` is the member).
 * Statements are separated by newlines. Each statement must begin on a new line.
-* Statement blocks are created *via indentation, i.e. using significant whitespace* (like in Python). In addition to that, redundant `{` and `}` are required. An advantage of this design decision is that it enables robust parse error recovery.
+
+## Significant whitespace
+
+Statement blocks are created *via indentation, i.e. using significant whitespace* (like in Python). In addition to that, redundant `{` and `}` are required. An advantage of this design decision is that it enables very robust parse error recovery.
+
+Statements can span multiple lines, as long as the subsequent lines are indented more than the first line of the statement.
+
+To prevent ambiguities, by default, you cannot mix tabs and spaces for indentation. It is recommended to either: 
+
+* Add a single line at the top of your source file: `//tab_size=N` (note: this must be the very first line), where N is the desired tab size; this will allow you to freely mix tabs and spaces. 
+* Choose either tabs or spaces and stick with your choice. If possible, configure your editor to convert spaces/tabs on paste, so you can easily copy paste code fragments. 
+
+Note: significant whitespace is an experimental feature.
 
 ## Core types 
 
