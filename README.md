@@ -21,13 +21,13 @@ Muon is a modern low-level programming language, inspired by C, C#, Go, Rust and
 8. **No undefined behavior.** Undefined behavior can lead to [various](https://blog.regehr.org/archives/213), [hard-to-spot](https://blog.regehr.org/archives/226), [bugs](https://blog.regehr.org/archives/232). In Muon, all behavior, including platform-specific behavior, is defined.
 
 9. **Ergonomics matter.** Programmers spend a lot of time working with a language, so ergonomics are important. Muon has:
-	- Type inference for function return values and locals.
-	- Generics.
-	- Order independent declarations.
-	- Newline as statement separator. 
-	- [Uniform function call syntax](docs/muon_by_example.md#ufcs).
-	- Reference type notation.
-	- Namespaces.
+	- Type inference for function return values and locals
+	- [Generics](docs/muon_by_example.md#generic-structs)
+	- Order independent declarations
+	- Newline as statement separator
+	- [Uniform function call syntax](docs/muon_by_example.md#ufcs)
+	- [Reference type notation](docs/muon_by_example.md#reference-type-notation)
+	- Namespaces
 
 10. **Fail fast.** Usually, error reporting/handling happens via return values. For unrecoverable errors and errors that a caller is not prepared to handle, Muon provides [abandonment](docs/muon_by_example.md#error-handling-abandonment).
 
@@ -83,7 +83,7 @@ Also, check out the [roadmap](docs/roadmap.md) to see which features are coming 
 
 ## Patreon
 
-Check out [Muon's Patreon page](TODO) if you'd like to support the project financially. If you can spare a few bucks a month, that would be seriously cool! :) 
+Check out [Muon's Patreon page](https://www.patreon.com/nickmqb) if you'd like to support the project financially. If you can spare a few bucks a month, that would be very cool!
 
 ## License
 
