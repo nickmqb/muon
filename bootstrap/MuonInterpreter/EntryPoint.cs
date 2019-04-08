@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 
 namespace MuonInterpreter {
     class EntryPoint {
-        const string Root = "D:/muon/";
-
         static CodeUnit Parse(string path) {
             using (var reader = new StreamReader(path)) {
                 var source = reader.ReadToEnd();
@@ -16,7 +14,7 @@ namespace MuonInterpreter {
             }            
         }
 
-        static Program ParseCompiler() {
+        static Program ParseCompiler(string rootPath) {
             var compilerSources = new[] {
                 "lib/core.mu",
                 "lib/basic.mu",
@@ -40,7 +38,7 @@ namespace MuonInterpreter {
                 "compiler/args_parser.mu",
                 "compiler/cpu_time_stopwatch.mu",
                 "compiler/mu.mu",
-            }.Select(p => Root + p).ToArray();
+            }.Select(p => Path.Combine(rootPath, p)).ToArray();
             var units = compilerSources.Select(p => Parse(p)).ToArray();
             return Linker.Link(units);
         }
@@ -51,25 +49,25 @@ namespace MuonInterpreter {
             return Interpreter.EvalFunction(ins, main);
         }
 
-        static void BootstrapCompiler() {
-            var program = ParseCompiler();
+        static void BootstrapCompiler(string rootPath) {
+            var program = ParseCompiler(rootPath);
             var args = new[] { "binary_name", "--args", "mu.args" }.ToArray();
-            Environment.CurrentDirectory = Root + "compiler";
+            Environment.CurrentDirectory = Path.Combine(rootPath, "compiler");
             RunMain(program, args);
         }
 
-        static void CompileDemo() {
-            var program = ParseCompiler();
+        static void CompileDemo(string rootPath) {
+            var program = ParseCompiler(rootPath);
 
             var args = new[] { "binary_name" }.Concat(new[] {
                 "lib/core.mu",
                 "lib/basic.mu",
                 "lib/containers.mu",
                 "demo/demo6.mu",
-            }.Select(p => Root + p)).Concat(new[] {
-                "--args", Root + "vc_demo/demo.args",
+            }.Select(p => Path.Combine(rootPath, p))).Concat(new[] {
+                "--args", Path.Combine(rootPath, "vc_demo/demo.args"),
                 "--max-errors", "100",
-                "--output-file", Root + "vc_demo/demo.c",
+                "--output-file", Path.Combine(rootPath, "vc_demo/demo.c"),
                 "--run-command", "[[demo.exe 13579]]",
             }).ToArray();
 
@@ -79,7 +77,7 @@ namespace MuonInterpreter {
         static void Main(string[] args) {
             // Note: this interpreter has many limitations, and is only used for bootstrapping the compiler.
 
-            BootstrapCompiler();
+            BootstrapCompiler("../../../..");
             //CompileDemo();
         } 
     }
