@@ -1,16 +1,16 @@
 CC=gcc
 CFLAGS=-m32 -O3
 INSTALLDIR=/usr/bin
-BINDIR=bootstrap/mu
+BINPATH=bootstrap/mu
 
 mu:
-	$(CC) $(CFLAGS) -o $(BINDIR) $(BINDIR).c
+	$(CC) $(CFLAGS) -o $(BINPATH) $(BINPATH).c
 
 clean:
-	$(RM) $(BINDIR)
+	$(RM) $(BINPATH)
 
 install: mu
-	cp $(BINDIR) $(INSTALLDIR)
+	cp $(BINPATH) $(INSTALLDIR)
 
 uninstall:
 	$(RM) $(INSTALLDIR)/mu
