@@ -85,6 +85,10 @@ Also, check out the [roadmap](docs/roadmap.md) to see which features are coming 
 
 Check out [Muon's Patreon page](https://www.patreon.com/nickmqb) if you'd like to support the project financially. If you can spare a few bucks a month, that would be very cool!
 
+## Discord
+
+To chat about Muon with other community members, join the [Muon Discord server](https://discord.gg/pbbhcvK). Note: this is a community run initiative. The main author of Muon (nickmqb) is not affiliated with the server, though he will try to drop by from time to time!
+
 ## License
 
 [MIT](LICENSE)
