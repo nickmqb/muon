@@ -297,9 +297,8 @@ ulong {
 }
 
 ssize {
-	// TODO: 64 bit
-	:minValue = -2147483648_sz
-	:maxValue = 0x7fffffff_sz
+	:minValue = _64bit ? cast(long.minValue, ssize) : cast(int.minValue, ssize)
+	:maxValue = _64bit ? cast(long.maxValue, ssize) : cast(int.maxValue, ssize)
 
 	hash(val ssize) {
 		return cast(val, uint)
@@ -311,9 +310,8 @@ ssize {
 }
 
 usize {
-	// TODO: 64 bit
 	:minValue = 0_usz
-	:maxValue = 0xffffffff_usz
+	:maxValue = _64bit ? cast(ulong.maxValue, usize) : cast(uint.maxValue, usize)
 
 	hash(val usize) {
 		return cast(val, uint)
@@ -683,12 +681,20 @@ CheckedMath {
 	}
 
 	mulPositiveSsize(x ssize, y ssize) {
-		// TODO: 64 bit
-		if x <= short.maxValue && y <= short.maxValue {
-			return x * y
-		}
-		if x <= ssize.maxValue / y {
-			return x * y
+		if ::_64bit {
+			if x <= int.maxValue && y <= int.maxValue {
+				return x * y
+			}
+			if x <= long.maxValue / y {
+				return x * y
+			}
+		} else {
+			if x <= short.maxValue && y <= short.maxValue {
+				return x * y
+			}
+			if cast(x, int) <= int.maxValue / cast(y, int) {
+				return x * y
+			}
 		}
 		abandon()
 	}

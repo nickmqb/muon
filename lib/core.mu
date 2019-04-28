@@ -63,6 +63,8 @@ Ptr {
 fun {
 }
 
+:_64bit bool #Foreign("_64bit")
+
 IAllocator struct {
 	data pointer
 	allocFn fun<pointer, ssize, pointer> // data, sizeInBytes, resultPtr

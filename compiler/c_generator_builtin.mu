@@ -204,11 +204,10 @@ CGenerator {
 				sb.write("));")					
 				c.out.writeLine(sb.toString())
 			} else {				
-				fromRank := from.ti.rank != 6 ? from.ti.rank : 4
-				toRank := to.ti.rank != 6 ? to.ti.rank : 4
+				fromRank := from.ti.rank != 6 ? from.ti.rank : ((c.comp.flags & CompilationFlags.target64bit) != 0 ? 8 : 4)
+				toRank := to.ti.rank != 6 ? to.ti.rank : ((c.comp.flags & CompilationFlags.target64bit) != 0 ? 8 : 4)
 				if (to.ti.flags & TypeFlags.unsigned) != 0 {
 					// signed -> unsigned
-					// TODO: 64 bit
 					if toRank >= fromRank {
 						sb.write("mu_____checkedcast(0 <= ")
 						sb.write(temp)
@@ -262,8 +261,11 @@ CGenerator {
 			if tag.ti == c.tags.ulong_.ti {
 				sb.write("0xffffffffffffffffuLL")
 			} else if tag.ti == c.tags.usize_.ti {
-				// TODO: 64 bit
-				sb.write("0xffffffffu")
+				if (c.comp.flags & CompilationFlags.target64bit) != 0 {
+					sb.write("0xffffffffffffffffuLL")
+				} else {
+					sb.write("0xffffffffu")
+				}
 			} else if tag.ti == c.tags.uint_.ti {
 				sb.write("0xffffffffu")
 			} else if tag.ti == c.tags.ushort_.ti {
@@ -277,8 +279,11 @@ CGenerator {
 			if tag.ti == c.tags.long_.ti {
 				sb.write("0x7fffffffffffffffLL")
 			} else if tag.ti == c.tags.ssize_.ti {
-				// TODO: 64 bit
-				sb.write("0x7fffffff")
+				if (c.comp.flags & CompilationFlags.target64bit) != 0 {
+					sb.write("0x7fffffffffffffffuLL")
+				} else {
+					sb.write("0x7fffffffu")
+				}
 			} else if tag.ti == c.tags.int_.ti {
 				sb.write("0x7fffffff")
 			} else if tag.ti == c.tags.short_.ti {

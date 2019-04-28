@@ -4,6 +4,7 @@ CompileArgs struct #RefType {
 	sources List<SourceInfo>
 	includeFile string
 	outputFile string
+	target64bit bool
 	noEntryPoint bool
 	buildCommand string	
 	runCommand string
@@ -85,6 +86,12 @@ ArgsParser {
 				parseIncludeFile(s)
 			} else if s.token == "--output-file" {
 				parseOutputFile(s)
+			} else if s.token == "-m32" {
+				s.result.target64bit = false
+				readToken(s)
+			} else if s.token == "-m64" {
+				s.result.target64bit = true
+				readToken(s)
 			} else if s.token == "--no-entry-point" {
 				s.result.noEntryPoint = true
 				readToken(s)

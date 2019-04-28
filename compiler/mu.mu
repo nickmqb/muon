@@ -146,6 +146,9 @@ compile(comp Compilation, args CompileArgs) {
 	Expander.expandPass2(expc)
 	//Expander.debug(comp.top)
 	genc := new CGenerator.createContext(comp)
+	if args.target64bit {
+		comp.flags |= CompilationFlags.target64bit
+	}
 	CGenerator.generate(genc, args.includeFile, !args.noEntryPoint, CompileArgs.compilerVersion)
 
 	generateTime := CpuTimeStopwatch.elapsed()

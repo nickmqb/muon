@@ -397,6 +397,8 @@ namespace MuonInterpreter {
                 case "%": return (long)EvalExpression(s, e.Lhs) % (long)EvalExpression(s, e.Rhs);
                 case "&": return (long)EvalExpression(s, e.Lhs) & (long)EvalExpression(s, e.Rhs);
                 case "|": return (long)EvalExpression(s, e.Lhs) | (long)EvalExpression(s, e.Rhs);
+                case ">>": return (long)EvalExpression(s, e.Lhs) >> (int)(long)EvalExpression(s, e.Rhs);
+                case "<<": return (long)EvalExpression(s, e.Lhs) << (int)(long)EvalExpression(s, e.Rhs);
                 case "&&": return (bool)EvalExpression(s, e.Lhs) && (bool)EvalExpression(s, e.Rhs);
                 case "||": return (bool)EvalExpression(s, e.Lhs) || (bool)EvalExpression(s, e.Rhs);
                 case "==": return EvalCompareEqualsExpression(s, e);
