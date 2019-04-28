@@ -343,3 +343,4 @@ examples/*.c
 
 # Custom msvc build scripts
 compiler/msvc_*.*
+compiler/rcc.bat
