@@ -23,13 +23,13 @@ mu.mu
 --output-file mu_release.c
 --include-file external_windows.h
 --build-command [[
-""C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl.exe"
+""C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.20.27508\bin\Hostx86\x86\cl.exe"
 	/X
 	/Y-
-	/I"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\include"
-	/I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\ucrt"
-	/I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\shared"
-	/I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um"
+	/I"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.20.27508\include"
+	/I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt"
+	/I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\shared"
+	/I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um"
 	mu_release.c
 	/TC
 	/Zi
@@ -37,8 +37,8 @@ mu.mu
 	/Ox
 	/Gw
 	/link
-	/LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\lib\x86"
-	/LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\ucrt\x86"
-	/LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.17763.0\um\x86"
+	/LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.20.27508\lib\x86"
+	/LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.18362.0\ucrt\x86"
+	/LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.18362.0\um\x86"
 	/NOLOGO"
 ]]
