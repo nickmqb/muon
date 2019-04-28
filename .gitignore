@@ -340,3 +340,6 @@ ASALocalRun/
 # Generated C files
 compiler/*.c
 examples/*.c
+
+# Custom msvc build scripts
+compiler/msvc_*.*
