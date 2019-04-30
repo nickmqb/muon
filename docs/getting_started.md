@@ -4,7 +4,7 @@
 
 1. Clone the repo.
 2. Navigate to the `bootstrap` directory.
-3. Use a C compiler to build the Muon compiler. You must specify a 32-bit output target (64-bit is not yet supported). For example:
+3. Use a C compiler to build the Muon compiler. Specify a 32-bit output target. For example:
 	* GCC: 
 		* Run: `gcc -m32 -O3 -o mu mu.c`
 		* You may have to install 32-bit output target support for GCC. E.g. on Ubuntu: `apt-get install gcc-multilib`
@@ -35,6 +35,12 @@
 ### Minimal core
 
 In any Muon program you must always include [`lib/core.mu`](../lib/core.mu) as a source file. Everything else is optional!
+
+### 64-bit output targets
+
+To compile to a 64-bit target, use the `-m64` command line flag. E.g. to compile hello world as a 64-bit program: `mu -m64 --args hello_world.args && gcc -m64 -o hello_world hello_world.c`. Note that the C compiler must use the same output target (otherwise, a C compilation error will be generated).
+
+The compiler itself can also be compiled as a 64-bit program (to bootstrap, use the 32-bit compiler), though it might be slightly slower than its 32-bit counterpart.
 
 ### Args files
 
