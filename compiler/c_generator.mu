@@ -248,15 +248,9 @@ CGenerator {
 		sym := symTag(tag)
 		c.out.writeLine(format("typedef struct {} {{", sym))
 		c.out.indent()
-		for e in tag.ti.members {
-			mem := e.value
-			match mem {
-				FieldDef: {
-					ftag := TypeChecker.closeTag(mem.tag, tag.ti.typeParamList, tag.args)
-					c.out.writeLine(format("{} {};", symTag(ftag), symId(mem.name)))
-				}
-				default: {}
-			}
+		for fd in tag.ti.fields {
+			ftag := TypeChecker.closeTag(fd.tag, tag.ti.typeParamList, tag.args)
+			c.out.writeLine(format("{} {};", symTag(ftag), symId(fd.name)))
 		}
 		c.out.unIndent()
 		c.out.writeLine(format("}} {};", sym))
