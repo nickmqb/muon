@@ -2,6 +2,8 @@
 
 Muon is a modern low-level programming language, inspired by C, C#, Go, Rust and Python.
 
+To stay up-to-date on Muon, consider [following me on Twitter](https://twitter.com/nickmqb).
+
 ## Design principles
 
 1. **Strongly, statically typed.**
