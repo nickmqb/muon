@@ -87,10 +87,6 @@ Also, check out the [roadmap](docs/roadmap.md) to see which features are coming 
 
 To stay up-to-date on Muon, consider [following me on Twitter](https://twitter.com/nickmqb).
 
-## Patreon
-
-Check out [Muon's Patreon page](https://www.patreon.com/nickmqb) if you'd like to support the project financially. If you can spare a few bucks a month, that would be very cool!
-
 ## Community
 
 To chat about Muon with other community members, join the [Muon Discord server](https://discord.gg/pbbhcvK). Note: this is a community run initiative. I (nickmqb) am not affiliated with the server, though I'll try to drop by from time to time.
