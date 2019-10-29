@@ -10,6 +10,7 @@ AstPrinter {
 			TypeParams: printTypeParams(s, a)
 			Attribute: printAttribute(s, a)
 			FunctionDef: printFunctionDef(s, a)
+			Param: printParam(s, a)
 			FieldDef: printFieldDef(s, a)
 			StaticFieldDef: printStaticFieldDef(s, a)
 			TaggedPointerOptionDef: printTaggedPointerOptionDef(s, a)
@@ -33,6 +34,7 @@ AstPrinter {
 			TernaryOperatorExpression: printTernaryOperatorExpression(s, a)
 			CallExpression: printCallExpression(s, a)
 			StructInitializerExpression: printStructInitializerExpression(s, a)
+			FieldInitializerExpression: printFieldInitializerExpression(s, a)
 			IndexExpression: printIndexExpression(s, a)
 			ParenExpression: printParenExpression(s, a)
 			NumberExpression: printNumberExpression(s, a)
@@ -89,10 +91,7 @@ AstPrinter {
 		}
 		printLine(s, "params:")
 		for p in a.params {
-			printToken(s, p.name)
-			indent(s)
-			printAny(s, p.type)
-			unIndent(s)
+			printParam(s, p)
 		}
 		printDescAny(s, "returnType", a.returnType)
 		printAttributes(s, a.attributes)
@@ -100,6 +99,14 @@ AstPrinter {
 		unIndent(s)
 	}
 	
+	printParam(s PrintState, a Param) {
+		printToken(s, a.name)
+		indent(s)
+		printAny(s, a.type)
+		printAttributes(s, a.attributes)
+		unIndent(s)
+	}
+
 	printFieldDef(s PrintState, a FieldDef) {
 		printDescToken(s, "FieldDef", a.name)
 		indent(s)
@@ -265,13 +272,20 @@ AstPrinter {
 		printLine(s, "args")
 		indent(s)
 		for a.args {
-			printDescAny(s, "fieldName", it.fieldName)
-			printDescAny(s, "expr", it.expr)			
+			printFieldInitializerExpression(s, it)
 		}
 		unIndent(s)
 		unIndent(s)
 	}
 	
+	printFieldInitializerExpression(s PrintState, a FieldInitializerExpression) {
+		printLine(s, "FieldInitializerExpression")
+		indent(s)
+		printDescAny(s, "fieldName", a.fieldName)
+		printDescAny(s, "expr", a.expr)
+		unIndent(s)
+	}
+
 	printIndexExpression(s PrintState, a IndexExpression) {
 		printLine(s, "IndexExpression")
 		indent(s)

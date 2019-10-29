@@ -188,6 +188,7 @@ FieldDef struct #RefType {
 	name Token
 	type Node
 	// Non-AST
+	ns Namespace
 	tag Tag
 }
 

@@ -525,6 +525,7 @@ TypeCheckerFirstPass {
 	}
 
 	checkField(c TypeCheckerContext, parent Namespace, fd FieldDef) {
+		fd.ns = parent
 		if !parent.members.tryAdd(fd.name.value, fd) {
 			duplicateMember(c, fd.name)
 		}

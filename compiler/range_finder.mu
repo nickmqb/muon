@@ -134,6 +134,9 @@ RangeFinder {
 		if a.type != null {
 			checkAny(s, a.type)
 		}
+		if a.attributes != null {
+			checkAttributes(s, a.attributes)
+		}
 	}
 	
 	checkFieldDef(s RangeFinderState, a FieldDef) {

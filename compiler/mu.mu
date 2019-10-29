@@ -108,6 +108,9 @@ dumpSymbols(ns Namespace, indent int) {
 }
 
 compile(comp Compilation, args CompileArgs) {
+	//aa := pointer_cast(::currentAllocator.data, ArenaAllocator)
+	//memoryBeforeParse := aa.current
+
 	CpuTimeStopwatch.start()
 	for si, id in args.sources {
 		//Stdout.writeLine(path)
@@ -121,6 +124,9 @@ compile(comp Compilation, args CompileArgs) {
 	}
 	
 	parseTime := CpuTimeStopwatch.elapsed()
+
+	//memoryAfterParse := aa.current
+
 	CpuTimeStopwatch.start()
 	
 	comp.firstTypeCheckErrorIndex = comp.errors.count
@@ -158,12 +164,18 @@ compile(comp Compilation, args CompileArgs) {
 	}
 	
 	if args.printStats {
+		numSourceBytes := 0
 		numLines := 0
 		for si in args.sources {
 			index := si.source.length - 1
+			numSourceBytes += index
 			li := ErrorHelper.spanToLocationInfo(si.source, IntRange(index, index))
 			numLines += li.line
 		}
+		Stdout.writeLine(format("NumSourceBytes: {}", numSourceBytes))
+		//numAstBytes := pointer.subtractSigned(memoryAfterParse, memoryBeforeParse)		
+		//Stdout.writeLine(format("NumAstBytes: {}", numAstBytes))
+		//Stdout.writeLine(format("NumAstBytes / NumSourceBytes: {}", numAstBytes / cast(numSourceBytes, double)))
 		Stdout.writeLine(format("NumLines: {}", numLines))
 		printf("Parse: %lfms\n", parseTime * 1000)
 		printf("TypeCheck: %lfms\n", typeCheckTime * 1000)
@@ -199,7 +211,7 @@ main() {
 	
 	argErrors := new List<ArgsParserError>{}
 	argsArray := Environment.getCommandLineArgs()
-	args := ArgsParser.parse(argsArray, argErrors)
+	args := ArgsParser.parse(argsArray, argErrors, "")
 
 	if args.printVersion || args.printHelp {
 		Stdout.writeLine(format("Muon compiler, version {}", CompileArgs.compilerVersion))

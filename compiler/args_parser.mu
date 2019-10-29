@@ -21,6 +21,7 @@ SourceInfo struct {
 
 ArgsParserState struct #RefType {
 	result CompileArgs
+	rootPath string
 	includedPaths Set<string>
 	path string
 	source string
@@ -38,7 +39,7 @@ ArgsParserError struct {
 }
 
 ArgsParser {
-	parse(args Array<string>, errors List<ArgsParserError>) {
+	reconstructArgsStringWithSentinel(args Array<string>) {
 		// Reconstruct original command line string (skip over binary name).
 		// This is kind of hacky, because the shell may have already made changes to the string (e.g. it may have removed quotes), which we now try to undo.
 		// TODO: Get raw command line string from the OS and parse that (unfortunately no good cross platform way to do this).
@@ -60,11 +61,17 @@ ArgsParser {
 			}
 		}
 		sb.write("\0")
-		
-		s := new ArgsParserState {			
+		return sb.toString()
+	}
+
+	parse(args Array<string>, errors List<ArgsParserError>, rootPath string) {
+		argsString := reconstructArgsStringWithSentinel(args)
+
+		s := new ArgsParserState {
 			result: new CompileArgs { sources: new List<SourceInfo>{}, maxErrors: 25, includeFile: "external.h", outputFile: "out.c" },
+			rootPath: rootPath,
 			includedPaths: new Set.create<string>(),
-			source: sb.toString(),
+			source: argsString,
 			errors: errors,
 		}
 		
@@ -77,11 +84,23 @@ ArgsParser {
 		
 		return s.result
 	}
+
+	parseArgsFile(path string, errors List<ArgsParserError>) {
+		s := new ArgsParserState {			
+			result: new CompileArgs { sources: new List<SourceInfo>{}, maxErrors: 25, includeFile: "external.h", outputFile: "out.c" },
+			includedPaths: new Set.create<string>(),
+			errors: errors,
+		}
+
+		parseArgsFileImpl(s, path)
+
+		return s.result
+	}
 	
 	parseArgs(s ArgsParserState) {
 		while s.token != "" {
 			if s.token == "--args" {
-				parseArgsFile(s)
+				parseArgsFileFlag(s)
 			} else if s.token == "--include-file" {
 				parseIncludeFile(s)
 			} else if s.token == "--output-file" {
@@ -119,26 +138,27 @@ ArgsParser {
 		}
 	}
 	
-	parseArgsFile(s ArgsParserState) {
+	parseArgsFileFlag(s ArgsParserState) {
 		readToken(s)
 		if s.token == "" {
 			expected(s, "filename")
 			return
 		}
-		
-		path := s.token
+		parseArgsFileImpl(s, s.token)
+		readToken(s)
+	}
+
+	parseArgsFileImpl(s ArgsParserState, path string) {
 		if s.includedPaths.contains(path) {
 			error(s, format("Args file has already been included: {}", path))
-			readToken(s)
 			return
 		}
 		
 		s.includedPaths.add(path)
-				
+		
 		sb := StringBuilder{}
-		if !File.tryReadToStringBuilder(path, ref sb) {
+		if !File.tryReadToStringBuilder(format("{}{}", s.rootPath, path), ref sb) {
 			error(s, format("Cannot open args file: ", path))
-			readToken(s)
 			return
 		}
 		sb.write("\0")
@@ -156,7 +176,6 @@ ArgsParser {
 		s.path = prevPath
 		s.source = prevSource
 		s.index = prevIndex		
-		readToken(s)
 	}
 	
 	parseIncludeFile(s ArgsParserState) {
