@@ -340,7 +340,10 @@ ASALocalRun/
 # Generated C files
 compiler/*.c
 examples/*.c
+language_server/*.c
 
-# Custom msvc build scripts
+# Custom msvc build scripts, workspaces
 compiler/msvc_*.*
 compiler/rcc.bat
+language_server/*.bat
+language_server/*.code-workspace

@@ -1,0 +1,115 @@
+ServerArgs struct #RefType {
+	argsPath string
+	debugPort int
+}
+
+ServerArgsParserState struct #RefType {
+	result ServerArgs
+	source string
+	index int
+	token string
+	tokenSpan IntRange
+	errors List<ArgsParserError>
+}
+
+ServerArgsParser {
+	parse(args string, errors List<ArgsParserError>) {
+		sb := StringBuilder{}
+		sb.write(args)
+		sb.writeChar('\0')
+
+		s := new ServerArgsParserState {			
+			result: new ServerArgs{},
+			source: sb.toString(),
+			errors: errors,
+		}
+		
+		readToken(s)
+		if s.token != "" {
+			parseArgs(s)
+		}			
+		
+		return s.result
+	}
+
+	parseArgs(s ServerArgsParserState) {
+		while s.token != "" {
+			if s.token == "--args" {
+				parseArgsPathFlag(s)
+			} else if s.token == "--debug-port" {
+				parseDebugPortFlag(s)
+			} else {
+				error(s, format("Invalid flag: {}", s.token))
+				readToken(s)
+			}
+		}
+	}
+	
+	parseArgsPathFlag(s ServerArgsParserState) {
+		readToken(s)
+		if s.token == "" {
+			expected(s, "filename")
+			return
+		}
+		s.result.argsPath = s.token
+		readToken(s)
+	}
+
+	parseDebugPortFlag(s ServerArgsParserState) {
+		readToken(s)
+		if s.token == "" {
+			expected(s, "port number")
+			return
+		}
+		port := int.tryParse(s.token)
+		if port.hasValue {
+			s.result.debugPort = port.unwrap()
+		} else {
+			error(s, "Expected: number")
+		}
+		readToken(s)
+	}
+
+	expected(s ServerArgsParserState, text string) {
+		s.errors.add(ArgsParserError { source: s.source, span: IntRange(s.tokenSpan.from, s.tokenSpan.from), text: format("Expected: {}", text) })
+	}
+	
+	error(s ServerArgsParserState, text string) {
+		s.errors.add(ArgsParserError { source: s.source, span: s.tokenSpan, text: text })
+	}
+	
+	readToken(s ServerArgsParserState) {
+		while isWhitespaceChar(s.source[s.index]) {
+			s.index += 1
+		}
+		quote := false
+		if s.source[s.index] == '"' {
+			quote = true
+			s.index += 1				
+		}
+		from := s.index			
+		next := 0
+		while true {
+			ch := s.source[s.index]
+			if ch == '"' && quote {
+				next = s.index + 1
+				break
+			} else if ch == ' ' && !quote {
+				next = s.index + 1
+				break
+			} else if ch == '\n' || ch == '\r' || ch == '\0' {
+				next = s.index
+				break
+			} else {
+				s.index += 1
+			}
+		}
+		s.token = s.source.slice(from, s.index)
+		s.tokenSpan = IntRange(from, s.index)
+		s.index = next
+	}
+	
+	isWhitespaceChar(ch char) {
+		return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
+	}
+}

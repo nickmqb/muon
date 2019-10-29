@@ -1,0 +1,3 @@
+Path {
+	:filePrefix = "file://"
+}
