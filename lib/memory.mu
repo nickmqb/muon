@@ -28,6 +28,16 @@ Memory {
 		assert(result != null)
 		return result
 	}
+
+	pushAllocator(allocator IAllocator) {
+		prev := ::currentAllocator
+		::currentAllocator = allocator
+		return prev
+	}
+
+	restoreAllocator(allocator IAllocator) {
+		::currentAllocator = allocator
+	}
 }
 
 ArenaAllocator struct #RefType {
@@ -78,5 +88,14 @@ ArenaAllocator struct #RefType {
 			allocFn: pointer_cast(ArenaAllocator.alloc, fun<pointer, ssize, pointer>),
 			reallocFn: pointer_cast(ArenaAllocator.realloc, fun<pointer, pointer, ssize, ssize, ssize, pointer>),
 		}
+	}
+
+	pushState(a ArenaAllocator) {
+		return a.current
+	}
+
+	restoreState(a ArenaAllocator, state pointer) {
+		assert(a.from <= state && state <= a.to)
+		a.current = state
 	}
 }

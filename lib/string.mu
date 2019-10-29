@@ -54,6 +54,50 @@ string {
 		return true
 	}
 	
+	startsWith_ignoreCase(s string, prefix string) {
+		if s.length < prefix.length {
+			return false
+		}
+		for i := 0; i < prefix.length {
+			if toLower_(s[i]) != toLower_(prefix[i]) {
+				return false
+			}
+		}
+		return true
+	}
+
+	compare_ignoreCase(a string, b string) {
+		len := min(a.length, b.length)
+		ap := a.dataPtr
+		bp := b.dataPtr
+		for i := 0; i < len {
+			ach := toLower_(pointer_cast(ap, *char)^)
+			bch := toLower_(pointer_cast(bp, *char)^)
+			if ach == bch {
+				// OK
+			} else if ach < bch {
+				return -1
+			} else {
+				return 1
+			}
+			ap += 1
+			bp += 1
+		}
+		if a.length < b.length {
+			return -1
+		} else if a.length > b.length {
+			return 1
+		}
+		return 0
+	}
+
+	toLower_(ch char) {
+		if 'A' <= ch && ch <= 'Z' {
+			return ch + 32
+		}
+		return ch
+	}
+
 	replace(s string, sub string, replacement string) {
 		rb := StringBuilder{}
 		last := 0
