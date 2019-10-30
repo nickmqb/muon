@@ -80,7 +80,7 @@ A glimpse of Muon:
 
 The compiler is single threaded right now and there's lots of room for further improvement. One major caveat: after the above stages have finished, a C compiler still needs to run to generate the final binary, which usually takes up the most time. The LLVM backend will (hopefully) reduce this.
 
-**Supported platforms**. The main focus is on Windows, Linux and macOS. However, because the compiler generates C code, it should be able to target most platforms. There is one restriction: the compiler assumes a 32-bit architecture. 64-bit support is in the works.
+**Supported platforms**. The main focus is on Windows, Linux and macOS. However, because the compiler generates C code, it should be able to target most platforms. Both 32-bit and 64-bit architectures are supported.
 
 ## Getting started
 
