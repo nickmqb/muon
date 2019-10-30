@@ -63,7 +63,12 @@ A glimpse of Muon:
 
 ## Current state
 
-**Tools**. [The compiler](docs/getting_started.md) implements error recovery and has column accurate error reporting, which should make for a pleasant command line experience. [More tools are planned](docs/roadmap.md) for later this year.
+**Tools**
+
+* [Compiler](docs/getting_started.md): implements error recovery and has column accurate error reporting, which should make for a pleasant command line experience.
+* [Language server](https://github.com/nickmqb/muon/tree/master/language_server): provides interactive language features, such as symbol search, go to definition and as-you-type diagnostics.
+* [VSCode extension](https://github.com/nickmqb/vscode-muon): provides syntax highlighting and language features via the language server.
+* [More tools are planned](docs/roadmap.md).
 
 **Compiler output**. The compiler currently outputs C code.This means that we inherit C's undefined behavior model, which goes against the goals listed above! An LLVM backend is in the works which will avoid any undefined behavior.
 
