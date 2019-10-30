@@ -87,10 +87,6 @@ Also, check out the [roadmap](docs/roadmap.md) to see which features are coming 
 
 To stay up-to-date on Muon, consider [following me on Twitter](https://twitter.com/nickmqb).
 
-## Community
-
-To chat about Muon with other community members, join the [Muon Discord server](https://discord.gg/pbbhcvK). Note: this is a community run initiative. I (nickmqb) am not affiliated with the server, though I'll try to drop by from time to time.
-
 ## License
 
 [MIT](LICENSE)
