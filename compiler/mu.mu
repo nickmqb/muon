@@ -180,6 +180,7 @@ compile(comp Compilation, args CompileArgs) {
 		printf("Parse: %lfms\n", parseTime * 1000)
 		printf("TypeCheck: %lfms\n", typeCheckTime * 1000)
 		printf("Generate: %lfms\n", generateTime * 1000)
+		printf("Total: %lfms\n", (parseTime + typeCheckTime + generateTime) * 1000)
 	}
 
 	if !File.tryWriteString(args.outputFile, genc.out.toString()) {

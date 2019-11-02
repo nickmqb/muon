@@ -343,7 +343,7 @@ examples/*.c
 language_server/*.c
 
 # Custom msvc build scripts, workspaces
-compiler/msvc_*.*
-compiler/rcc.bat
+compiler/*.bat
+compiler/*.code-workspace
 language_server/*.bat
 language_server/*.code-workspace

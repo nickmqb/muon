@@ -5,7 +5,7 @@
 #define _Thread_local __declspec(thread)
 #define _Static_assert static_assert
 #endif
-_Static_assert(sizeof(uintptr_t) == 4, "Must use 32-bit output target");
+_Static_assert(sizeof(uintptr_t) == 8, "Must use 64-bit output target");
 typedef void void__;
 typedef int8_t sbyte__;
 typedef uint8_t byte__;
@@ -15,8 +15,8 @@ typedef int32_t int__;
 typedef uint32_t uint__;
 typedef int64_t long__;
 typedef uint64_t ulong__;
-typedef int32_t ssize__;
-typedef uint32_t usize__;
+typedef int64_t ssize__;
+typedef uint64_t usize__;
 typedef float float__;
 typedef double double__;
 typedef uint8_t bool__;
@@ -659,27 +659,27 @@ typedef struct ReturnStatement__ ReturnStatement__;
 typedef uint32_t IndentMode__;
 typedef struct IntRange__ IntRange__;
 typedef struct { int__ id__; pointer__ dataPtr__; } Node__;
-#define Node_____Ptr__ForEachStatement____ 1
-#define Node_____Ptr__ForIndexStatement____ 2
-#define Node_____Ptr__MatchStatement____ 3
-#define Node_____Ptr__FunctionDef____ 4
-#define Node_____Ptr__CodeUnit____ 5
-#define Node_____Ptr__NamespaceDef____ 6
-#define Node_____Ptr__Param____ 7
-#define Node_____Ptr__FieldDef____ 8
-#define Node_____Ptr__StaticFieldDef____ 9
-#define Node_____Ptr__TaggedPointerOptionDef____ 10
-#define Node_____Ptr__TypeModifierExpression____ 11
-#define Node_____Ptr__TypeArgsExpression____ 12
+#define Node_____Ptr__ExpressionStatement____ 1
+#define Node_____Ptr__ReturnStatement____ 2
+#define Node_____Ptr__BreakStatement____ 3
+#define Node_____Ptr__ContinueStatement____ 4
+#define Node_____Ptr__IfStatement____ 5
+#define Node_____Ptr__WhileStatement____ 6
+#define Node_____Ptr__ForEachStatement____ 7
+#define Node_____Ptr__ForIndexStatement____ 8
+#define Node_____Ptr__MatchStatement____ 9
+#define Node_____Ptr__FunctionDef____ 10
+#define Node_____Ptr__CodeUnit____ 11
+#define Node_____Ptr__NamespaceDef____ 12
 #define Node_____Ptr__TypeParams____ 13
 #define Node_____Ptr__Attribute____ 14
-#define Node_____Ptr__BlockStatement____ 15
-#define Node_____Ptr__ExpressionStatement____ 16
-#define Node_____Ptr__ReturnStatement____ 17
-#define Node_____Ptr__BreakStatement____ 18
-#define Node_____Ptr__ContinueStatement____ 19
-#define Node_____Ptr__IfStatement____ 20
-#define Node_____Ptr__WhileStatement____ 21
+#define Node_____Ptr__Param____ 15
+#define Node_____Ptr__FieldDef____ 16
+#define Node_____Ptr__StaticFieldDef____ 17
+#define Node_____Ptr__TaggedPointerOptionDef____ 18
+#define Node_____Ptr__TypeModifierExpression____ 19
+#define Node_____Ptr__TypeArgsExpression____ 20
+#define Node_____Ptr__BlockStatement____ 21
 #define Node_____Ptr__MatchCase____ 22
 #define Node_____Ptr__UnaryOperatorExpression____ 23
 #define Node_____Ptr__PostfixUnaryOperatorExpression____ 24
@@ -716,10 +716,10 @@ typedef struct Map__string__Tag____ Map__string__Tag____;
 typedef struct Map__string__Ptr__FunctionDef______ Map__string__Ptr__FunctionDef______;
 typedef struct Map__string__string____ Map__string__string____;
 typedef struct { int__ id__; pointer__ dataPtr__; } NamespaceMember__;
-#define NamespaceMember_____Ptr__StaticFieldDef____ 1
-#define NamespaceMember_____Ptr__Namespace____ 2
-#define NamespaceMember_____Ptr__FunctionDef____ 3
-#define NamespaceMember_____Ptr__FieldDef____ 4
+#define NamespaceMember_____Ptr__FunctionDef____ 1
+#define NamespaceMember_____Ptr__FieldDef____ 2
+#define NamespaceMember_____Ptr__StaticFieldDef____ 3
+#define NamespaceMember_____Ptr__Namespace____ 4
 typedef struct FieldInitializerExpression__ FieldInitializerExpression__;
 typedef uint32_t ResolveExpressionOptions__;
 typedef struct EvalResult__ EvalResult__;
@@ -1555,7 +1555,7 @@ typedef struct MapEntry__string__string____ {
 // STATIC FIELDS
 static int__ mu_____argc;
 static pointer__ mu_____argv;
-const bool__ top______64bit__ = 0;
+const bool__ top______64bit__ = 1;
 _Thread_local int__ CpuTimeStopwatch__startClock__;
 #define CpuTimeStopwatch__CLOCKS_PER_SEC__ (int__)(CLOCKS_PER_SEC)
 const uint__ CompilationFlags__target64bit__ = 2u;
@@ -1579,8 +1579,8 @@ const uint__ ResolveExpressionOptions__callTarget__ = 1u;
 const uint__ ResolveExpressionOptions__dotLhs__ = 2u;
 const int__ int__maxValue__ = 2147483647;
 const int__ int__minValue__ = -2147483647 - 1;
-const usize__ usize__minValue__ = 0u;
-const usize__ usize__maxValue__ = 4294967295u;
+const usize__ usize__minValue__ = 0uLL;
+const usize__ usize__maxValue__ = 0xffffffffffffffffuLL;
 const uint__ NamespaceKind__default___ = 0u;
 const uint__ NamespaceKind__taggedPointerEnum__ = 3u;
 const uint__ NamespaceKind__struct___ = 1u;
@@ -1683,8 +1683,8 @@ const uint__ FunctionFlags__returnsValue__ = 1u;
 const uint__ FunctionFlags__requireExplicitReturnType__ = 16u;
 const uint__ FunctionFlags__marshalReturnType__ = 32u;
 _Thread_local IAllocator__ top_____currentAllocator__;
-const ssize__ ssize__minValue__ = -2147483647 - 1;
-const ssize__ ssize__maxValue__ = 2147483647;
+const ssize__ ssize__minValue__ = -9223372036854775807LL - 1;
+const ssize__ ssize__maxValue__ = 9223372036854775807LL;
 const uint__ ParseCommaListState__expectValue__ = 1u;
 const uint__ ParseCommaListState__expectComma__ = 2u;
 const uint__ ParseCommaListState__start__ = 0u;
@@ -3705,6 +3705,7 @@ int__ cstring__length__(cstring__ cstr__) {
 		p__ = (p__) + (1);
 	}
 	ssize__ local0 = pointer__subtractSigned__(p__, from__);
+	mu_____checkedcast(local0 + ((ssize__)0x7fffffff) + 1 <= (ssize__)(0xffffffffu));
 	return (int__)(local0);
 }
 void__ cstring__writeTo__(cstring__ cstr__, StringBuilder__* sb__) {
@@ -8203,6 +8204,7 @@ Result__string____ Stdin__tryReadLine__() {
 			p__ = (p__) + (1);
 		}
 		ssize__ local1 = pointer__subtractSigned__(p__, from__);
+		mu_____checkedcast(local1 + ((ssize__)0x7fffffff) + 1 <= (ssize__)(0xffffffffu));
 		int__ len__ = (int__)(local1);
 		bool__ local2 = (0) < (len__);
 		if (local2) {
