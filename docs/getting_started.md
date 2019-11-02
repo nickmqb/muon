@@ -4,18 +4,22 @@
 
 1. Clone the repo.
 2. Navigate to the `bootstrap` directory.
-3. Use a C compiler to build the Muon compiler. Specify a 32-bit output target. For example:
-	* GCC: 
-		* Run: `gcc -m32 -O3 -o mu mu.c`
+3. Use a C compiler to build the Muon compiler. You can choose between a 32-bit or 64-bit output target (use `mu32.c` or `mu64.c`). Your choice does not affect the functionality of the compiler. However, the 32-bit version may be (slightly) faster. For example:
+	* GCC (32-bit): 
+		* Run: `gcc -m32 -O3 -o mu mu32.c`
 		* You may have to install 32-bit output target support for GCC. E.g. on Ubuntu: `apt-get install gcc-multilib`
-	* MSVC:
-		* Run: `cl -Ox mu.c`
-		* Note that you must set up a 32-bit MSVC build environment first. E.g.: `"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x86`
+	* GCC (64-bit):
+		* Run: `gcc -O3 -o mu mu64.c`
+	* MSVC (32-bit):
+		* Run: `cl -Ox mu32.c`
+		* Note that you must set up a MSVC build environment first. E.g.: `"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x86`
 		* Note that the .bat file may be in a different location depending on which version of MSVC you have installed.
-	* Clang (Linux): 
-		* Run: `clang -m32 -O3 -o mu mu.c`
-	* Clang (Windows): 
-		* Run: `clang -m32 -O3 -o mu.exe mu.c`
+	* Clang (Linux, 32-bit): 
+		* Run: `clang -m32 -O3 -o mu mu32.c`
+	* Clang (Linux, 64-bit): 
+		* Run: `clang -O3 -o mu mu64.c`
+	* Clang (Windows, 32-bit): 
+		* Run: `clang -m32 -O3 -o mu.exe mu32.c`
 
 4. You now have a Muon compiler! The binary is called `mu` on Linux/macOS, `mu.exe` on Windows.
 5. Move the binary to a location where it's easily accessible. From here on, we'll just refer to the binary as `mu`.
@@ -39,8 +43,6 @@ In any Muon program you must always include [`lib/core.mu`](../lib/core.mu) as a
 ### 64-bit output targets
 
 To compile to a 64-bit target, use the `-m64` command line flag. E.g. to compile hello world as a 64-bit program: `mu -m64 --args hello_world.args && gcc -m64 -o hello_world hello_world.c`. Note that the C compiler must use the same output target (otherwise, a C compilation error will be generated).
-
-The compiler itself can also be compiled as a 64-bit program (to bootstrap, use the 32-bit compiler), though it might be slightly slower than its 32-bit counterpart.
 
 ### Args files
 
