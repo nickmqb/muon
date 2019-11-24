@@ -35,7 +35,7 @@ To stay up-to-date on Muon, consider [following me on Twitter](https://twitter.c
 
 11. **Small(-ish) language.** Strive for a small, simple language. Having fewer ways to do something encourages a more consistent, focused ecosystem.
 
-12. **Fast & snappy tools.** Provide tools centered around fast feedback and improving program understanding. E.g.: language server, REPL, hot reloading, debuggers, profilers.
+12. **Fast & snappy tools.** Provide tools centered around fast feedback and improving program understanding. E.g.: [language server](https://github.com/nickmqb/muon/tree/master/language_server), REPL, hot reloading, debuggers, profilers.
 
 ## Example
 
