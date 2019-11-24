@@ -105,12 +105,4 @@ ParsedPath struct {
         }
         return rb.toString()
     }
-
-    isLetter(ch char) {
-        return ('A' <= ch && ch <= 'Z') || ('a' <= ch && ch <= 'z')
-    }
-
-    isDriveLetterPart(part string) {
-        return part.length == 2 && isLetter(part[0]) && part[1] == ':'    
-    }
 }

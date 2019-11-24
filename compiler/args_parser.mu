@@ -85,14 +85,15 @@ ArgsParser {
 		return s.result
 	}
 
-	parseArgsFile(path string, errors List<ArgsParserError>) {
+	parseArgsFile(path string, errors List<ArgsParserError>, rootPath string) {
 		s := new ArgsParserState {			
 			result: new CompileArgs { sources: new List<SourceInfo>{}, maxErrors: 25, includeFile: "external.h", outputFile: "out.c" },
+			rootPath: rootPath,
 			includedPaths: new Set.create<string>(),
 			errors: errors,
 		}
 
-		parseArgsFileImpl(s, path)
+		parseArgsFileImpl(s, path, true)
 
 		return s.result
 	}
@@ -144,11 +145,11 @@ ArgsParser {
 			expected(s, "filename")
 			return
 		}
-		parseArgsFileImpl(s, s.token)
+		parseArgsFileImpl(s, s.token, false)
 		readToken(s)
 	}
 
-	parseArgsFileImpl(s ArgsParserState, path string) {
+	parseArgsFileImpl(s ArgsParserState, path string, ignoreRootPath bool) {
 		if s.includedPaths.contains(path) {
 			error(s, format("Args file has already been included: {}", path))
 			return
@@ -157,8 +158,9 @@ ArgsParser {
 		s.includedPaths.add(path)
 		
 		sb := StringBuilder{}
-		if !File.tryReadToStringBuilder(format("{}{}", s.rootPath, path), ref sb) {
-			error(s, format("Cannot open args file: ", path))
+		fullPath := format("{}{}", !ignoreRootPath ? s.rootPath : "", path)
+		if !File.tryReadToStringBuilder(fullPath, ref sb) {
+			error(s, format("Cannot open args file: {}", fullPath))
 			return
 		}
 		sb.write("\0")
@@ -240,8 +242,9 @@ ArgsParser {
 	parseSourceFile(s ArgsParserState) {
 		path := s.token
 		sb := StringBuilder{}
-		if !File.tryReadToStringBuilder(path, ref sb) {
-			error(s, format("Cannot open source file: {}", path))
+		fullPath := format("{}{}", s.rootPath, path)
+		if !File.tryReadToStringBuilder(fullPath, ref sb) {
+			error(s, format("Cannot open source file: {}", fullPath))
 			readToken(s)
 			return
 		}

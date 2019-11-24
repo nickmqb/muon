@@ -26,20 +26,28 @@ Stderr {
     }
 }
 
-:debugSocket TcpSocket #Mutable
+:logSocket TcpSocket #Mutable
+:logFile pointer #Mutable
+:logStderr bool #Mutable
 :newLine Maybe<string> #Mutable
 
 debugMessage(s string) {
-    if debugSocket != null {
-        debugSocket.sendString(s)
+    if logSocket != null {
+        logSocket.sendString(s)
     }
-    Stderr.write(s)
-    fflush(stderr)
+    if logFile != null {
+        fprintf(logFile, "%.*s", s.length, s.dataPtr)
+        fflush(logFile)
+    }
+    if logStderr {
+        Stderr.write(s)
+        fflush(stderr)
+    }
 }
 
 abandonHandler(code int) {
-    DebugBreak()
     debugMessage("Abandoned\n")
+    DebugBreak()
     exit(1)
 }
 
@@ -132,11 +140,16 @@ List {
         memmove(list.dataPtr + from, list.dataPtr + to, cast(list.count - to, uint))
         list.count -= (to - from)
     }
+
+    setString(list List<char>, s string) {
+        list.count = 0
+        insertString(list, s, 0)
+    }
 }
 
 tryFindDocumentByAbsPath(docs List<Document>, absPath string) {
     for d in docs {
-        if d.absPath == absPath {
+        if Path.equals(d.absPath, absPath) {
             return d
         }
     }
@@ -200,10 +213,17 @@ sendDiagnostics(ws Workspace) {
 
     diags := Map.create<Document, List<string>>()
     for e in ws.latestComp.errors {
-        doc := findDocumentByUnit(ws.documents, e.unit)
-        span := e.span
-        range := Range { start: indexToPos(doc, span.from), end: indexToPos(doc, span.to) }
-        diag := format("{{\"range\": {}, \"message\": \"{}\"}}", range.toJson(), Json.escapeString(e.text))
+        doc := cast(null, Document)
+        range := Range{}
+        if e.unit != null {
+            doc = findDocumentByUnit(ws.documents, e.unit)
+            span := e.span
+            range = Range { start: indexToPos(doc, span.from), end: indexToPos(doc, span.to) }
+        } else {
+            doc = ws.documents[0]
+            range = Range{}
+        }
+        diag := format("{{\"range\": {}, \"message\": \"{}\", \"severity\": 1}}", range.toJson(), Json.escapeString(e.text))
         list := diags.getOrDefault(doc)
         if list == null {
             list = new List<string>{}
@@ -233,20 +253,38 @@ sendDiagnostics(ws Workspace) {
 sendMessage(s string) {
     msg := format("Content-Length: {}{}{}{}", s.length, newLine.unwrap(), newLine.unwrap(), s)
     fprintf(stdout, "%.*s", msg.length, msg.dataPtr)
-    fprintf(stderr, "%.*s", msg.length, msg.dataPtr)
+    //fprintf(stderr, "%.*s", msg.length, msg.dataPtr)
     assert(fflush(stdout) == 0)
 }
 
 handleInitialize(obj Map<string, JsonValue>, ws Workspace, args ServerArgs) {
+    id := int.tryParse(obj.get("id").as(*JsonOtherValue)^.value).unwrap()
+
     params := obj.get("params").as(Map<string, JsonValue>)
 
     prev := Memory.pushAllocator(::documentAllocator.iAllocator_escaping())
 
-    rootPath := params.get("rootPath").as(*string)^
-    sourceRootPath := Path.combine(rootPath, Path.getDirectoryName(args.argsPath))
+    rootUriNode := params.getOrDefault("rootUri")
+    rootPath := rootUriNode != null ? Path.fromFileUri(rootUriNode.as(*string)^) : params.get("rootPath").as(*string)^
+
+    isAbsolutePath := Path.isAbsolutePath(args.argsPath)
+    argsPath := Path.simplify(Path.combine(isAbsolutePath ? "" : rootPath, args.argsPath))
+    sourceRootPath := Path.simplify(Path.combine(isAbsolutePath ? "" : rootPath, Path.getDirectoryName(args.argsPath)))
+    
+    debugMessage(format("Workspace root path: {}\n", rootPath))
+    debugMessage(format("Args path: {}\n", argsPath))
+    debugMessage(format("Source root path: {}\n", sourceRootPath))
     
     errors := new List<ArgsParserError>{}
-    compileArgs := ArgsParser.parseArgsFile(args.argsPath, errors)
+    compileArgs := ArgsParser.parseArgsFile(args.argsPath, errors, format("{}/", sourceRootPath))
+
+    if errors.count > 0 {
+        for e in errors {
+            debugMessage(format("{}\n", e.text))
+        }
+        abandon()
+    }
+
     ws.compileArgs = compileArgs
 
     ws.documents = new List<Document>{}
@@ -266,11 +304,11 @@ handleInitialize(obj Map<string, JsonValue>, ws Workspace, args ServerArgs) {
         ws.documents.add(doc)
     }
 
-    Memory.restoreAllocator(prev)
+    Memory.restoreAllocator(prev)    
 
     compile(ws)
 
-    response := "{\"jsonrpc\":\"2.0\",\"id\":0,\"result\":{\"capabilities\":{\"textDocumentSync\":2,\"definitionProvider\": true,\"workspaceSymbolProvider\":true}}}"
+    response := format("{{\"jsonrpc\":\"2.0\",\"id\":{},\"result\":{{\"capabilities\":{{\"textDocumentSync\":2,\"definitionProvider\": true,\"workspaceSymbolProvider\":true}}}}}}", id)
     //response := "{\"jsonrpc\":\"2.0\",\"id\":0,\"error\":{\"code\":-32603,\"message\":\"internal server err\"}}"
     sendMessage(response)
 
@@ -281,7 +319,7 @@ handleDocumentOpen(obj Map<string, JsonValue>, ws Workspace) {
     params := obj.get("params").as(Map<string, JsonValue>)
     textDocument := params.get("textDocument").as(Map<string, JsonValue>)
     uri := textDocument.get("uri").as(*string)^
-    path := Path.fromFileUri(uri)
+    path := Path.simplify(Path.fromFileUri(uri))
     doc := tryFindDocumentByAbsPath(ws.documents, path)
     if doc == null {
         debugMessage(format("Ignoring document: {}\n", path))
@@ -297,16 +335,18 @@ handleDocumentOpen(obj Map<string, JsonValue>, ws Workspace) {
     updateLineMap(doc)
     Memory.restoreAllocator(prev)
 
+    debugMessage(format("Loaded document: {}\n", path))
+
     compile(ws)
     
-    debugMessage(format("Loaded document: {}\n", path))
+    sendDiagnostics(ws)
 }
 
 handleDocumentChange(obj Map<string, JsonValue>, ws Workspace) {
     params := obj.get("params").as(Map<string, JsonValue>)
     textDocument := params.get("textDocument").as(Map<string, JsonValue>)
     uri := textDocument.get("uri").as(*string)^
-    path := Path.fromFileUri(uri)
+    path := Path.simplify(Path.fromFileUri(uri))
     doc := tryFindDocumentByAbsPath(ws.documents, path)
     if doc == null {
         return
@@ -317,14 +357,20 @@ handleDocumentChange(obj Map<string, JsonValue>, ws Workspace) {
     prev := Memory.pushAllocator(::documentAllocator.iAllocator_escaping())
     for ccval in contentChanges {
         cc := ccval.as(Map<string, JsonValue>)
-        range := Range.fromJson(cc.get("range").as(Map<string, JsonValue>))
         text := cc.get("text").as(*string)^
-        fromIndex := doc.lineStart[range.start.line] + range.start.character
-        toIndex := doc.lineStart[range.end.line] + range.end.character
-        doc.text.removeSlice(fromIndex, toIndex)
-        doc.text.insertString(text, fromIndex)
+        rangeNode := cc.getOrDefault("range")
+        if rangeNode != null {
+            range := Range.fromJson(rangeNode.as(Map<string, JsonValue>))
+            fromIndex := doc.lineStart[range.start.line] + range.start.character
+            toIndex := doc.lineStart[range.end.line] + range.end.character
+            doc.text.removeSlice(fromIndex, toIndex)
+            doc.text.insertString(text, fromIndex)
+        } else {
+            doc.text.setString(text)
+            doc.text.add(transmute(0, char))
+        }
     }
-    updateLineMap(doc)
+    updateLineMap(doc)    
     Memory.restoreAllocator(prev)
 
     compile(ws)
@@ -336,7 +382,7 @@ handleGoToDefinition(obj Map<string, JsonValue>, ws Workspace) {
     params := obj.get("params").as(Map<string, JsonValue>)
     textDocument := params.get("textDocument").as(Map<string, JsonValue>)
     uri := textDocument.get("uri").as(*string)^
-    path := Path.fromFileUri(uri)
+    path := Path.simplify(Path.fromFileUri(uri))
     doc := tryFindDocumentByAbsPath(ws.documents, path)
     if doc == null {
         return
@@ -392,6 +438,12 @@ handleFindSymbol(obj Map<string, JsonValue>, ws Workspace) {
     }
     
     response := format("{{\"jsonrpc\":\"2.0\",\"id\":{},\"result\":[{}]}}", id, string.join(",", ref out.slice(0, out.count)))
+    sendMessage(response)
+}
+
+handleShutdown(obj Map<string, JsonValue>) {
+    id := int.tryParse(obj.get("id").as(*JsonOtherValue)^.value).unwrap()
+    response := format("{{\"jsonrpc\":\"2.0\",\"id\":{},\"result\":null}}", id)
     sendMessage(response)
 }
 
@@ -510,10 +562,15 @@ main() {
         return
     }
 
-    if args.debugPort != 0 {
+    if args.logPort != 0 {
         TcpSocket.static_init()
-        ::debugSocket = new TcpSocket.localClient(checked_cast(args.debugPort, ushort))
+        ::logSocket = new TcpSocket.localClient(checked_cast(args.logPort, ushort))
     }
+    if args.logFile {
+        ::logFile = fopen("muon_language_server.log", "w")
+        assert(::logFile != null)
+    }
+    ::logStderr = args.logStderr
 
     debugMessage("============== Starting server ==============\n")
     
@@ -523,6 +580,7 @@ main() {
     ::currentAllocator = tempAlloc.iAllocator_escaping()
 
     isInitialized := false
+    isShutdown := false
     ws := new Workspace{}
 
     while true {
@@ -545,13 +603,22 @@ main() {
         msg := Stdin.readBytesAsString(contentLength)
         obj := Json.parse(msg)
         method := obj.get("method").as(*string)^
+        debugMessage(format("Got message: {}\n", method))
         
         if method == "initialize" {
+            //debugMessage(format("Info: {}\n{}\n", method, msg))
             assert(!isInitialized)
+            assert(!isShutdown)
             handleInitialize(obj, ws, args)
             isInitialized = true
+        } else if method == "shutdown" {
+            handleShutdown(obj)
+            isShutdown = true
+        } else if method == "exit" {
+            break
         } else {
             assert(isInitialized)
+            assert(!isShutdown)
             if method == "textDocument/didOpen" {
                 handleDocumentOpen(obj, ws)
             } else if method == "textDocument/didChange" {
@@ -570,5 +637,10 @@ main() {
         tempAlloc.restoreState(prev)
     }
 
-    ::debugSocket.close()
+    if ::logSocket != null {
+        ::logSocket.close()
+    }
+    if ::logFile != null {
+        fclose(logFile)
+    }
 }

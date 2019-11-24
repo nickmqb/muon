@@ -1,6 +1,8 @@
 ServerArgs struct #RefType {
 	argsPath string
-	debugPort int
+	logPort int
+	logStderr bool
+	logFile bool
 }
 
 ServerArgsParserState struct #RefType {
@@ -25,37 +27,48 @@ ServerArgsParser {
 		}
 		
 		readToken(s)
-		if s.token != "" {
-			parseArgs(s)
-		}			
+		parseArgs(s)
 		
 		return s.result
 	}
 
 	parseArgs(s ServerArgsParserState) {
+		args := false
+
 		while s.token != "" {
 			if s.token == "--args" {
 				parseArgsPathFlag(s)
-			} else if s.token == "--debug-port" {
-				parseDebugPortFlag(s)
+				args = true
+			} else if s.token == "--log-port" {
+				parseLogPortFlag(s)
+			} else if s.token == "--log-stderr" {
+				readToken(s)
+				s.result.logStderr = true
+			} else if s.token == "--log-file" {
+				readToken(s)
+				s.result.logFile = true
 			} else {
 				error(s, format("Invalid flag: {}", s.token))
 				readToken(s)
 			}
+		}
+		
+		if !args {
+			expected(s, "--args [path]")
 		}
 	}
 	
 	parseArgsPathFlag(s ServerArgsParserState) {
 		readToken(s)
 		if s.token == "" {
-			expected(s, "filename")
+			expected(s, "path")
 			return
 		}
 		s.result.argsPath = s.token
 		readToken(s)
 	}
 
-	parseDebugPortFlag(s ServerArgsParserState) {
+	parseLogPortFlag(s ServerArgsParserState) {
 		readToken(s)
 		if s.token == "" {
 			expected(s, "port number")
@@ -63,7 +76,7 @@ ServerArgsParser {
 		}
 		port := int.tryParse(s.token)
 		if port.hasValue {
-			s.result.debugPort = port.unwrap()
+			s.result.logPort = port.unwrap()
 		} else {
 			error(s, "Expected: number")
 		}
