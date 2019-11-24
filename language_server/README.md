@@ -49,22 +49,22 @@ If you specify the command line argument `--log-stderr`, the server will log det
 
 #### VS Code
 
-Symbol search
+Symbol search  
 ![alt text](https://github.com/nickmqb/vscode-muon/blob/master/symbol-search.gif "Symbol search")
 
-Go to definition
+Go to definition  
 ![alt text](https://github.com/nickmqb/vscode-muon/blob/master/go-to-definition.gif "Go to definition")
 
-Error feedback
+Error feedback  
 ![alt text](https://github.com/nickmqb/vscode-muon/blob/master/error-feedback.gif "Error feedback")
 
 #### VIM
 
-Symbol search
+Symbol search  
 ![alt text](https://github.com/nickmqb/muon/blob/master/docs/vim-symbol-search.gif "Symbol search")
 
-Go to definition
+Go to definition  
 ![alt text](https://github.com/nickmqb/muon/blob/master/docs/vim-go-to-definition.gif "Go to definition")
 
-Error feedback
+Error feedback  
 ![alt text](https://github.com/nickmqb/muon/blob/master/docs/vim-error-feedback.gif "Error feedback")
