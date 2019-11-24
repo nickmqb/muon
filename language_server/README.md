@@ -13,10 +13,10 @@ Any editor that supports the the Language Server Protocol can use the language s
 
 Some examples:
 
-* VS Code, via [vscode-muon](https://github.com/nickmqb/vscode-muon), by [nickmqb](https://github.com/nickmqb) (Muon author). Also includes syntax highlighting.
+* VS Code, via [vscode-muon](https://github.com/nickmqb/vscode-muon), by [nickmqb](https://github.com/nickmqb) (Muon author). Also includes syntax highlighting.  
 ![alt text](https://github.com/nickmqb/vscode-muon/blob/master/symbol-search.gif "Symbol search in VS Code")
 
-* VIM, using [vim-lsc](https://github.com/natebosch/vim-lsc).
+* VIM, using [vim-lsc](https://github.com/natebosch/vim-lsc).  
 ![alt text](https://github.com/nickmqb/muon/blob/master/docs/vim-symbol-search.gif "Symbol search in VIM")
 
 For more screenshots, [see below](#more-screenshots).
@@ -39,7 +39,7 @@ The server requires a single command line argument: `--args [path]`. This must b
 
 The source files that are listed in the args file will be processed by the language server. Source files not listed in the args file don't get language server support.
 
-**Important notes!**: The args path must not contain any spaces. If you specify a relative path, it will be interpreted as being relative to the `rootPath`, which is provided by the editor and sent to the language server. For example, VS Code sets the rootPath to the path of the first folder in the workspace. Also, all source file paths in the args file must be relative paths.
+**Important notes**: The args path _must not contain any spaces_. If you specify a relative path, it will be interpreted as being relative to the `rootPath`, which is provided by the editor and sent to the language server. For example, VS Code sets the rootPath to the path of the first folder in the workspace. Also, all source file paths in the args file _must be relative paths_.
 
 ### Troubleshooting
 
@@ -47,10 +47,24 @@ If you specify the command line argument `--log-stderr`, the server will log det
 
 ### More screenshots
 
+#### VS Code
+
+Symbol search
 ![alt text](https://github.com/nickmqb/vscode-muon/blob/master/symbol-search.gif "Symbol search")
+
+Go to definition
 ![alt text](https://github.com/nickmqb/vscode-muon/blob/master/go-to-definition.gif "Go to definition")
+
+Error feedback
 ![alt text](https://github.com/nickmqb/vscode-muon/blob/master/error-feedback.gif "Error feedback")
 
+#### VIM
+
+Symbol search
 ![alt text](https://github.com/nickmqb/muon/blob/master/docs/vim-symbol-search.gif "Symbol search")
+
+Go to definition
 ![alt text](https://github.com/nickmqb/muon/blob/master/docs/vim-go-to-definition.gif "Go to definition")
+
+Error feedback
 ![alt text](https://github.com/nickmqb/muon/blob/master/docs/vim-error-feedback.gif "Error feedback")
