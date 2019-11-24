@@ -61,6 +61,12 @@ A glimpse of Muon:
 		}
 	}
 
+## Getting started
+
+To get started with Muon, see [getting started](docs/getting_started.md). To learn more about the language, see [Muon by example](docs/muon_by_example.md).
+
+Also, check out the [roadmap](docs/roadmap.md) to see which features are coming up.
+
 ## Current state
 
 **Tools**
@@ -81,12 +87,6 @@ A glimpse of Muon:
 The compiler is single threaded right now and there's lots of room for further improvement. One major caveat: after the above stages have finished, a C compiler still needs to run to generate the final binary, which usually takes up the most time. The LLVM backend will (hopefully) reduce this.
 
 **Supported platforms**. The main focus is on Windows, Linux and macOS. However, because the compiler generates C code, it should be able to target most platforms. Both 32-bit and 64-bit architectures are supported.
-
-## Getting started
-
-To get started with Muon, see [getting started](docs/getting_started.md). To learn more about the language, see [Muon by example](docs/muon_by_example.md).
-
-Also, check out the [roadmap](docs/roadmap.md) to see which features are coming up.
 
 ## Twitter
 
