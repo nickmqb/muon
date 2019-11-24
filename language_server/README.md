@@ -4,27 +4,24 @@ The Muon language server enables interactive compiler features during developmen
 
 Currently, the following features are implemented:
 * Symbol search  
-![alt text](https://github.com/nickmqb/vscode-muon/blob/master/symbol-search.gif "Symbol search")
 * Go to definition  
-![alt text](https://github.com/nickmqb/vscode-muon/blob/master/go-to-definition.gif "Go to definition")
 * As-you-type diagnostics (i.e. "live error feedback")  
-![alt text](https://github.com/nickmqb/vscode-muon/blob/master/error-feedback.gif "Error feedback")
-
-Note: the language server is in a pre-alpha state. You may encounter some rough edges.
 
 ### Supported editors
 
-Any editor that supports the the Language Server Protocol can use the language server (if you run into issues with your editor, please file a bug).
+Any editor that supports the the Language Server Protocol can use the language server. If you run into issues with your editor, [please file a bug](https://github.com/nickmqb/muon/issues).
 
-Each editor will likely require a bit of configuration and/or glue code to make everything work. This configuration/glue code can usually be packaged as an editor extension/plugin to easily allow people to use the language server for that particular editor. Examples (just one currently):
+Some examples:
 
-* [vscode-muon](https://github.com/nickmqb/vscode-muon), by [nickmqb](https://github.com/nickmqb) (Muon author): for VSCode. Syntax highlighting, language features (via language server).
+* VS Code, via [vscode-muon](https://github.com/nickmqb/vscode-muon), by [nickmqb](https://github.com/nickmqb) (Muon author). Also includes syntax highlighting.
+![alt text](https://github.com/nickmqb/vscode-muon/blob/master/symbol-search.gif "Symbol search in VS Code")
 
-Other extensions that do not (yet) support the language server:
+* VIM, using [vim-lsc](https://github.com/natebosch/vim-lsc).
+![alt text](https://github.com/nickmqb/muon/blob/master/docs/vim-symbol-search.gif "Symbol search in VIM")
 
-* [muon-mode](https://github.com/pgervais/muon-mode/blob/master/muon-mode.el), by [pgervais](https://github.com/pgervais): for Emacs. Syntax highlighting, indentation.
+For more screenshots, [see below](#more-screenshots).
 
-If you've created a Muon extension for an editor and would like me to include the extension here, let me know.
+If you've created a Muon extension/plugin for an editor, or if you have written instructions on how to use Muon with an editor (possibly using an existing plugin for that editor), feel free to let me know and I'll include a link here.
 
 ### Build
 
@@ -38,16 +35,22 @@ If you've created a Muon extension for an editor and would like me to include th
 
 ### Run
 
-The server takes a single command line argument: `--args [path]`. This must be the path of a `.args` file that would normally be passed to the compiler. E.g.: `language_server --args hello_world.args`
+The server requires a single command line argument: `--args [path]`. This must be the path of a `.args` file that would normally be passed to the compiler. E.g.: `language_server --args hello_world.args`
 
 The source files that are listed in the args file will be processed by the language server. Source files not listed in the args file don't get language server support.
 
-Note! The args path must be a relative path that does not contain any spaces. It must be relative to the `rootPath` provided by the editor in the `initialize` message. For example, in VSCode the rootPath is path of the first folder in the workspace. Also, all source file paths in the args file must be relative paths.
-
-The args file is not read until the server receives an `initialize` message from the language client (editor).
-
-You'd normally configure your editor to start the language server on demand (e.g. when the editor encounters a `.mu` file). For an example, see [vscode-muon](https://github.com/nickmqb/vscode-muon).
+**Important notes!**: The args path must not contain any spaces. If you specify a relative path, it will be interpreted as being relative to the `rootPath`, which is provided by the editor and sent to the language server. For example, VS Code sets the rootPath to the path of the first folder in the workspace. Also, all source file paths in the args file must be relative paths.
 
 ### Troubleshooting
 
-The server prints status messages to `stderr`. Further error reporting for language server errors/configuration errors is still TODO (and not great at the moment: currently the server mostly just abandons upon encountering an unexpected input/situation). If the problem persists, feel free to file a bug.
+If you specify the command line argument `--log-stderr`, the server will log detailed status messages to `stderr`. If you specify `--log-file`, the server will log status messages to the file `muon_language_server.log` in the current directory. If you find any bugs, [please let me know](https://github.com/nickmqb/muon/issues).
+
+### More screenshots
+
+![alt text](https://github.com/nickmqb/vscode-muon/blob/master/symbol-search.gif "Symbol search")
+![alt text](https://github.com/nickmqb/vscode-muon/blob/master/go-to-definition.gif "Go to definition")
+![alt text](https://github.com/nickmqb/vscode-muon/blob/master/error-feedback.gif "Error feedback")
+
+![alt text](https://github.com/nickmqb/muon/blob/master/docs/vim-symbol-search.gif "Symbol search")
+![alt text](https://github.com/nickmqb/muon/blob/master/docs/vim-go-to-definition.gif "Go to definition")
+![alt text](https://github.com/nickmqb/muon/blob/master/docs/vim-error-feedback.gif "Error feedback")
