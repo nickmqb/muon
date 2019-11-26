@@ -1,9 +1,9 @@
-ARCH?=32
-CC?=gcc
+ARCH=32
+CC=gcc
 CFLAGS=-m$(ARCH) -O3
-PREFIX?=/usr/local
-BINPATH?=bootstrap/mu
-RM?=rm
+PREFIX=/usr/local
+BINPATH=bootstrap/mu
+RM=rm
 
 mu:
 	$(CC) $(CFLAGS) -o $(BINPATH) $(BINPATH)$(ARCH).c
