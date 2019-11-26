@@ -1,18 +1,20 @@
-CC=gcc
-CFLAGS=-m32 -O3
-INSTALLDIR=/usr/bin
-BINPATH=bootstrap/mu
+ARCH?=32
+CC?=gcc
+CFLAGS=-m$(ARCH) -O3
+PREFIX?=/usr/local
+BINPATH?=bootstrap/mu
+RM?=rm
 
 mu:
-	$(CC) $(CFLAGS) -o $(BINPATH) $(BINPATH).c
+	$(CC) $(CFLAGS) -o $(BINPATH) $(BINPATH)$(ARCH).c
 
 clean:
 	$(RM) $(BINPATH)
 
 install: mu
-	cp $(BINPATH) $(INSTALLDIR)
+	cp $(BINPATH) $(PREFIX)/bin
 
 uninstall:
-	$(RM) $(INSTALLDIR)/mu
+	$(RM) $(PREFIX)/bin/mu
 
-
+.PHONY: clean install uninstall
