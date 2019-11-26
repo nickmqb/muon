@@ -19,7 +19,7 @@ Some examples:
 * VIM, using [vim-lsc](https://github.com/natebosch/vim-lsc).  
 ![alt text](https://github.com/nickmqb/muon/blob/master/docs/vim-symbol-search.gif "Symbol search in VIM")
 
-For more screenshots, [see below](#more-screenshots).
+For more GIFs, [see below](#more-gifs).
 
 If you've created a Muon extension/plugin for an editor, or if you have written instructions on how to use Muon with an editor (possibly using an existing plugin for that editor), feel free to let me know and I'll include a link here.
 
@@ -45,7 +45,11 @@ The source files that are listed in the args file will be processed by the langu
 
 If you specify the command line argument `--log-stderr`, the server will log detailed status messages to `stderr`. If you specify `--log-file`, the server will log status messages to the file `muon_language_server.log` in the current directory. If you find any bugs, [please let me know](https://github.com/nickmqb/muon/issues).
 
-### More screenshots
+### More information
+
+You may also be interested in [my blog post on the design process of the Muon language server](https://nickmqb.github.io/2019/11/24/building-a-language-server-for-muon.html). Also, to stay up-to-date on Muon, consider [following me on Twitter](https://twitter.com/nickmqb).
+
+### More GIFs
 
 #### VS Code
 
