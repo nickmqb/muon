@@ -1,5 +1,6 @@
 malloc(size usize) pointer #Foreign("malloc")
 realloc(ptr pointer, new_size usize) pointer #Foreign("realloc")
+free(ptr pointer) void #Foreign("free")
 
 Memory {
 	newArenaAllocator(capacity ssize) {
@@ -14,6 +15,7 @@ Memory {
 		return IAllocator {
 			allocFn: heapAllocFn,
 			reallocFn: heapReallocFn,
+			freeFn: heapFreeFn,
 		}
 	}
 	
@@ -27,6 +29,11 @@ Memory {
 		result := realloc(ptr, checked_cast(newSizeInBytes, usize))
 		assert(result != null)
 		return result
+	}
+
+	heapFreeFn(data pointer, ptr pointer) {
+		assert(ptr != null)
+		free(ptr)
 	}
 
 	pushAllocator(allocator IAllocator) {
