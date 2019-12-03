@@ -17,10 +17,11 @@
 * Delayed type inference (e.g. `x := ---; x = 2`)
 * Optional function parameters with a default value
 * Functions with variable number of arguments
-* Unicode character type; support full unicore character range 
+* Unicode character type; support full unicode character range
 * Fully general container iteration (currently container types are hardcoded in compiler)
 * Sequences: allow the use of constructs like filter/map with the performance of a for loop
 * `#Export` attribute to customize visibility (mainly for library authors)
+* `defer` statement
 * Operator overloading
 * Discriminated unions
 * Builtin serialization of any type
@@ -30,7 +31,6 @@
 
 ### Code generation
 
-* 64-bit output target support
 * LLVM backend
 * x86 backend (maybe, non-optimizing backend, fast compilation)
 * WASM backend (maybe)
@@ -73,10 +73,8 @@
 
 ### Tools
 
-* Syntax definition files for popular editors
-* Language server
-* Plugins for popular editors 
 * REPL
 * Hot reloading
 * Debugger
 * Profiler
+* More extensions for popular editors (in addition to the [VS Code extension](https://github.com/nickmqb/vscode-muon))
