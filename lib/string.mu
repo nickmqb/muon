@@ -101,7 +101,8 @@ string {
 	replace(s string, sub string, replacement string) {
 		rb := StringBuilder{}
 		last := 0
-		for i := 0; i < s.length {
+		i := 0
+		while i < s.length {
 			j := i
 			k := 0
 			while k < sub.length {
