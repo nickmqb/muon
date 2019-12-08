@@ -155,6 +155,9 @@ compile(comp Compilation, args CompileArgs) {
 	if args.target64bit {
 		comp.flags |= CompilationFlags.target64bit
 	}
+	if args.hack_addStructSuffix {
+		comp.flags |= CompilationFlags.hack_addStructSuffix
+	}
 	CGenerator.generate(genc, args.includeFile, !args.noEntryPoint, CompileArgs.compilerVersion)
 
 	generateTime := CpuTimeStopwatch.elapsed()
@@ -212,7 +215,8 @@ main() {
 	
 	argErrors := new List<ArgsParserError>{}
 	argsArray := Environment.getCommandLineArgs()
-	args := ArgsParser.parse(argsArray, argErrors, "")
+	argsParseResult := ArgsParser.parse(argsArray, argErrors)
+	args := argsParseResult.args
 
 	if args.printVersion || args.printHelp {
 		Stdout.writeLine(format("Muon compiler, version {}", CompileArgs.compilerVersion))
@@ -228,10 +232,10 @@ main() {
 			if i > 0 {
 				Stdout.writeLine("")
 			}
-			if e.path != "" || e.source != "" {
-				Stdout.writeLine(ErrorHelper.getErrorDesc(e.path, e.source, e.span, e.text))
+			if e.path == "" {
+				Stdout.writeLine(CommandLineArgsParser.getErrorDesc(e.commandLineError, argsParseResult.commandLineInfo))
 			} else {
-				Stdout.writeLine(e.text)
+				Stdout.writeLine(ErrorHelper.getErrorDesc(e.path, e.source, e.span, e.text))
 			}
 		}
 		Environment.exit(1)

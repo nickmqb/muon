@@ -11,6 +11,7 @@ Compilation struct #RefType {
 CompilationFlags enum #Flags {
 	useArgcArgv
 	target64bit
+	hack_addStructSuffix
 }
 
 NamespaceMember tagged_pointer {
@@ -424,6 +425,7 @@ TypeCheckerFirstPass {
 		}
 		asAttribute := cast(null, Attribute)
 		varArgsAttribute := cast(null, Attribute)
+		callingConventionAttribute := cast(null, Attribute)
 		if fd.attributes != null {
 			for a in fd.attributes {
 				if a.name.value == "Foreign" {					
@@ -438,6 +440,11 @@ TypeCheckerFirstPass {
 						varArgsAttribute = a
 					}
 					checkFunctionVarArgsAttribute(c, fd, a)
+				} else if a.name.value == "CallingConvention" {
+					if callingConventionAttribute == null {
+						callingConventionAttribute = a
+					}
+					checkFunctionCallingConventionAttribute(c, fd, a)
 				} else {
 					badAttribute(c, a)
 				}
@@ -598,7 +605,21 @@ TypeCheckerFirstPass {
 		checkAttributeArgCount(c, a, 0)
 		fd.flags |= FunctionFlags.varArgs
 	}
-	
+
+	checkFunctionCallingConventionAttribute(c TypeCheckerContext, fd FunctionDef, a Attribute) {
+		if (fd.flags & FunctionFlags.callingConvention) != 0 {
+			redundantAttribute(c, a)
+			return
+		}
+		fd.flags |= FunctionFlags.callingConvention
+		if checkAttributeArgCount(c, a, 1) {
+			maybeCalllingConvention := getConstantString(c, a.args[0])
+			if maybeCalllingConvention.hasValue {
+				fd.callingConvention = maybeCalllingConvention.value
+			}			
+		}		
+	}
+
 	checkParamAsAttribute(c TypeCheckerContext, fd FunctionDef, p Param, a Attribute) {
 		if (p.flags & ParamFlags.marshalType) != 0 {
 			redundantAttribute(c, a)

@@ -6,6 +6,7 @@
 ../lib/memory.mu
 ../lib/stdio.mu
 ../lib/sort.mu
+../lib/range.mu
 ../compiler/ast.mu
 ../compiler/range_finder.mu
 ../compiler/type_checker_first_pass.mu
@@ -19,6 +20,7 @@
 ../compiler/args_parser.mu
 ../compiler/cpu_time_stopwatch.mu
 ../compiler/ast_debug_helper.mu
+../compiler/command_line_args_parser.mu
 path.mu
 json.mu
 path_finder.mu

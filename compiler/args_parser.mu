@@ -12,6 +12,7 @@ CompileArgs struct #RefType {
 	printStats bool
 	printVersion bool
 	printHelp bool
+	hack_addStructSuffix bool
 }
 
 SourceInfo struct {
@@ -20,9 +21,11 @@ SourceInfo struct {
 }
 
 ArgsParserState struct #RefType {
-	result CompileArgs
-	rootPath string
+	args CompileArgs
+	resolvePath fun<string, pointer, string>
+	resolvePathUserData pointer
 	includedPaths Set<string>
+	commandLineParser CommandLineArgsParser
 	path string
 	source string
 	index int
@@ -33,45 +36,25 @@ ArgsParserState struct #RefType {
 
 ArgsParserError struct {
 	path string
+	commandLineError CommandLineArgsParserError
 	source string
 	span IntRange
 	text string
 }
 
-ArgsParser {
-	reconstructArgsStringWithSentinel(args Array<string>) {
-		// Reconstruct original command line string (skip over binary name).
-		// This is kind of hacky, because the shell may have already made changes to the string (e.g. it may have removed quotes), which we now try to undo.
-		// TODO: Get raw command line string from the OS and parse that (unfortunately no good cross platform way to do this).
-		sb := new StringBuilder{}
-		insertSep := false
-		for i := 1; i < args.count {
-			if insertSep {
-				sb.write(" ")
-			} else {
-				insertSep = true
-			}
-			a := args[i]
-			if a.indexOfChar(' ') >= 0 {
-				sb.write("\"")
-				sb.write(a)
-				sb.write("\"")
-			} else {
-				sb.write(a)
-			}
-		}
-		sb.write("\0")
-		return sb.toString()
-	}
+ArgsParserResult struct {
+	args CompileArgs
+	commandLineInfo CommandLineInfo
+}
 
-	parse(args Array<string>, errors List<ArgsParserError>, rootPath string) {
-		argsString := reconstructArgsStringWithSentinel(args)
+ArgsParser {
+	parse(args Array<string>, errors List<ArgsParserError>) {
+		commandLineParser := new CommandLineArgsParser.from(args, null)
 
 		s := new ArgsParserState {
-			result: new CompileArgs { sources: new List<SourceInfo>{}, maxErrors: 25, includeFile: "external.h", outputFile: "out.c" },
-			rootPath: rootPath,
+			args: new CompileArgs { sources: new List<SourceInfo>{}, maxErrors: 25, includeFile: "external.h", outputFile: "out.c" },
 			includedPaths: new Set.create<string>(),
-			source: argsString,
+			commandLineParser: commandLineParser,
 			errors: errors,
 		}
 		
@@ -79,23 +62,24 @@ ArgsParser {
 		if s.token != "" {
 			parseArgs(s)
 		} else {
-			s.result.printHelp = true
+			s.args.printHelp = true
 		}			
 		
-		return s.result
+		return ArgsParserResult { args: s.args, commandLineInfo: commandLineParser.getCommandLineInfo() }
 	}
 
-	parseArgsFile(path string, errors List<ArgsParserError>, rootPath string) {
+	parseArgsFile(path string, errors List<ArgsParserError>, resolvePath fun<string, pointer, string>, resolvePathUserData pointer) {
 		s := new ArgsParserState {			
-			result: new CompileArgs { sources: new List<SourceInfo>{}, maxErrors: 25, includeFile: "external.h", outputFile: "out.c" },
-			rootPath: rootPath,
+			args: new CompileArgs { sources: new List<SourceInfo>{}, maxErrors: 25, includeFile: "external.h", outputFile: "out.c" },
+			resolvePath: resolvePath,
+			resolvePathUserData: resolvePathUserData,
 			includedPaths: new Set.create<string>(),
 			errors: errors,
 		}
 
-		parseArgsFileImpl(s, path, true)
+		parseArgsFileImpl(s, path)
 
-		return s.result
+		return s.args
 	}
 	
 	parseArgs(s ArgsParserState) {
@@ -107,13 +91,13 @@ ArgsParser {
 			} else if s.token == "--output-file" {
 				parseOutputFile(s)
 			} else if s.token == "-m32" {
-				s.result.target64bit = false
+				s.args.target64bit = false
 				readToken(s)
 			} else if s.token == "-m64" {
-				s.result.target64bit = true
+				s.args.target64bit = true
 				readToken(s)
 			} else if s.token == "--no-entry-point" {
-				s.result.noEntryPoint = true
+				s.args.noEntryPoint = true
 				readToken(s)
 			} else if s.token == "--build-command" {
 				parseBuildCommand(s)
@@ -122,13 +106,16 @@ ArgsParser {
 			} else if s.token == "--max-errors" {
 				parseMaxErrors(s)
 			} else if s.token == "--print-stats" {
-				s.result.printStats = true
+				s.args.printStats = true
 				readToken(s)
 			} else if s.token == "--version" {
-				s.result.printVersion = true
+				s.args.printVersion = true
 				readToken(s)
 			} else if s.token == "--help" {
-				s.result.printHelp = true
+				s.args.printHelp = true
+				readToken(s)
+			} else if s.token == "--add-struct-suffix" {
+				s.args.hack_addStructSuffix = true
 				readToken(s)
 			} else if !s.token.startsWith("--") {
 				parseSourceFile(s)
@@ -145,11 +132,12 @@ ArgsParser {
 			expected(s, "filename")
 			return
 		}
-		parseArgsFileImpl(s, s.token, false)
+		parseArgsFileImpl(s, s.token)
 		readToken(s)
 	}
 
-	parseArgsFileImpl(s ArgsParserState, path string, ignoreRootPath bool) {
+	parseArgsFileImpl(s ArgsParserState, path string) {
+		assert(path != "")
 		if s.includedPaths.contains(path) {
 			error(s, format("Args file has already been included: {}", path))
 			return
@@ -158,7 +146,7 @@ ArgsParser {
 		s.includedPaths.add(path)
 		
 		sb := StringBuilder{}
-		fullPath := format("{}{}", !ignoreRootPath ? s.rootPath : "", path)
+		fullPath := s.resolvePath != null ? s.resolvePath(path, s.resolvePathUserData) : path
 		if !File.tryReadToStringBuilder(fullPath, ref sb) {
 			error(s, format("Cannot open args file: {}", fullPath))
 			return
@@ -186,7 +174,7 @@ ArgsParser {
 			expected(s, "filename")
 			return
 		} else {
-			s.result.includeFile = s.token
+			s.args.includeFile = s.token
 		}
 		readToken(s)
 	}
@@ -197,7 +185,7 @@ ArgsParser {
 			expected(s, "filename")
 			return
 		} else {
-			s.result.outputFile = s.token
+			s.args.outputFile = s.token
 		}
 		readToken(s)
 	}
@@ -208,7 +196,7 @@ ArgsParser {
 			expected(s, "command")			
 			return
 		} else {
-			s.result.buildCommand = s.token
+			s.args.buildCommand = s.token
 		}
 		readToken(s)
 	}
@@ -219,7 +207,7 @@ ArgsParser {
 			expected(s, "command")			
 			return
 		} else {
-			s.result.runCommand = s.token
+			s.args.runCommand = s.token
 		}
 		readToken(s)
 	}
@@ -235,33 +223,48 @@ ArgsParser {
 			error(s, "Expected: number")
 		}
 			
-		s.result.maxErrors = cast(pr.value, int)
+		s.args.maxErrors = cast(pr.value, int)
 		readToken(s)
 	}
 	
 	parseSourceFile(s ArgsParserState) {
 		path := s.token
 		sb := StringBuilder{}
-		fullPath := format("{}{}", s.rootPath, path)
+		fullPath := s.resolvePath != null ? s.resolvePath(path, s.resolvePathUserData) : path
 		if !File.tryReadToStringBuilder(fullPath, ref sb) {
 			error(s, format("Cannot open source file: {}", fullPath))
 			readToken(s)
 			return
 		}
 		sb.write("\0")
-		s.result.sources.add(SourceInfo { path: path, source: sb.toString() })
+		s.args.sources.add(SourceInfo { path: path, source: sb.toString() })
 		readToken(s)
 	}
 	
 	expected(s ArgsParserState, text string) {
-		s.errors.add(ArgsParserError { path: s.path, source: s.source, span: IntRange(s.tokenSpan.from, s.tokenSpan.from), text: format("Expected: {}", text) })
+		text = format("Expected: {}", text)
+		if s.path == "" {
+			s.errors.add(ArgsParserError { commandLineError: CommandLineArgsParserError { index: s.commandLineParser.index, text: text }, text: text })
+		} else {
+			s.errors.add(ArgsParserError { path: s.path, source: s.source, span: IntRange(s.tokenSpan.from, s.tokenSpan.from), text: text })
+		}
 	}
 	
 	error(s ArgsParserState, text string) {
-		s.errors.add(ArgsParserError { path: s.path, source: s.source, span: s.tokenSpan, text: text })
+		if s.path == "" {
+			parser := s.commandLineParser
+			arg := parser.args[parser.index - 1]
+			s.errors.add(ArgsParserError { commandLineError: CommandLineArgsParserError { index: parser.index - 1, innerSpan: IntRange(0, arg.length), text: text }, text: text })
+		} else {
+			s.errors.add(ArgsParserError { path: s.path, source: s.source, span: s.tokenSpan, text: text })
+		}
 	}
 	
 	readToken(s ArgsParserState) {
+		if s.path == "" {
+			s.token = s.commandLineParser.readToken()
+			return
+		}
 		while isWhitespaceChar(s.source[s.index]) {
 			s.index += 1
 		}

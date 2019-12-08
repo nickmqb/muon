@@ -123,6 +123,7 @@ FunctionDef struct #RefType {
 	flags FunctionFlags
 	typeParamList List<Namespace>
 	foreignName string
+	callingConvention string
 	returnTag Tag
 	builtin BuiltinFunction
 	tas CustomSet<Array<Tag>>
@@ -146,6 +147,7 @@ FunctionFlags enum #Flags {
 	requireExplicitReturnType
 	marshalReturnType
 	varArgs
+	callingConvention
 }
 
 BuiltinFunction enum {
@@ -414,15 +416,6 @@ Token struct #RefType {
 	outerSpan IntRange
 	indent int
 }
-
-IntRange struct {
-	from int
-	to int
-	
-	cons(from int, to int) {
-		return IntRange { from: from, to: to }
-	}
-}	
 
 TokenType enum {
 	identifier

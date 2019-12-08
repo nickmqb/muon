@@ -1,128 +1,60 @@
 ServerArgs struct #RefType {
 	argsPath string
+	rootPath string
 	logPort int
 	logStderr bool
 	logFile bool
 }
 
-ServerArgsParserState struct #RefType {
-	result ServerArgs
-	source string
-	index int
-	token string
-	tokenSpan IntRange
-	errors List<ArgsParserError>
+parseArgs(parser CommandLineArgsParser) {
+	args := new ServerArgs{}
+	hasArgsPath := false
+
+	token := parser.readToken()
+
+	while token != "" {
+		if token == "--args" {
+			args.argsPath = parsePathFlag(parser)
+			hasArgsPath = true
+		} else if token == "--root-path" {
+			args.rootPath = parsePathFlag(parser)
+		} else if token == "--log-port" {
+			parseLogPortFlag(args, parser)
+		} else if token == "--log-stderr" {
+			args.logStderr = true
+		} else if token == "--log-file" {
+			args.logFile = true
+		} else {
+			parser.error(format("Invalid flag: {}", token))
+		}
+		token = parser.readToken()
+	}
+	
+	if !hasArgsPath {
+		parser.expected("--args [path]")
+	}
+
+	return args
 }
 
-ServerArgsParser {
-	parse(args string, errors List<ArgsParserError>) {
-		sb := StringBuilder{}
-		sb.write(args)
-		sb.writeChar('\0')
+parsePathFlag(parser CommandLineArgsParser) {
+	token := parser.readToken()
+	if token == "" {
+		parser.expected("path")
+	}
+	return token
+}
 
-		s := new ServerArgsParserState {			
-			result: new ServerArgs{},
-			source: sb.toString(),
-			errors: errors,
-		}
-		
-		readToken(s)
-		parseArgs(s)
-		
-		return s.result
+parseLogPortFlag(args ServerArgs, parser CommandLineArgsParser) {
+	token := parser.readToken()
+	if token == "" {
+		parser.expected("port number")
+		return
 	}
-
-	parseArgs(s ServerArgsParserState) {
-		args := false
-
-		while s.token != "" {
-			if s.token == "--args" {
-				parseArgsPathFlag(s)
-				args = true
-			} else if s.token == "--log-port" {
-				parseLogPortFlag(s)
-			} else if s.token == "--log-stderr" {
-				readToken(s)
-				s.result.logStderr = true
-			} else if s.token == "--log-file" {
-				readToken(s)
-				s.result.logFile = true
-			} else {
-				error(s, format("Invalid flag: {}", s.token))
-				readToken(s)
-			}
-		}
-		
-		if !args {
-			expected(s, "--args [path]")
-		}
-	}
-	
-	parseArgsPathFlag(s ServerArgsParserState) {
-		readToken(s)
-		if s.token == "" {
-			expected(s, "path")
-			return
-		}
-		s.result.argsPath = s.token
-		readToken(s)
-	}
-
-	parseLogPortFlag(s ServerArgsParserState) {
-		readToken(s)
-		if s.token == "" {
-			expected(s, "port number")
-			return
-		}
-		port := int.tryParse(s.token)
-		if port.hasValue {
-			s.result.logPort = port.unwrap()
-		} else {
-			error(s, "Expected: number")
-		}
-		readToken(s)
-	}
-
-	expected(s ServerArgsParserState, text string) {
-		s.errors.add(ArgsParserError { source: s.source, span: IntRange(s.tokenSpan.from, s.tokenSpan.from), text: format("Expected: {}", text) })
-	}
-	
-	error(s ServerArgsParserState, text string) {
-		s.errors.add(ArgsParserError { source: s.source, span: s.tokenSpan, text: text })
-	}
-	
-	readToken(s ServerArgsParserState) {
-		while isWhitespaceChar(s.source[s.index]) {
-			s.index += 1
-		}
-		quote := false
-		if s.source[s.index] == '"' {
-			quote = true
-			s.index += 1				
-		}
-		from := s.index			
-		next := 0
-		while true {
-			ch := s.source[s.index]
-			if ch == '"' && quote {
-				next = s.index + 1
-				break
-			} else if ch == ' ' && !quote {
-				next = s.index + 1
-				break
-			} else if ch == '\n' || ch == '\r' || ch == '\0' {
-				next = s.index
-				break
-			} else {
-				s.index += 1
-			}
-		}
-		s.token = s.source.slice(from, s.index)
-		s.tokenSpan = IntRange(from, s.index)
-		s.index = next
-	}
-	
-	isWhitespaceChar(ch char) {
-		return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
-	}
+	port := int.tryParse(token)
+	if port.hasValue {
+		args.logPort = port.unwrap()
+	} else {
+		parser.error("Expected: number")
+	}	
 }

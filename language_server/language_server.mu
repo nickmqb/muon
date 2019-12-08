@@ -1,7 +1,5 @@
 exit(code int) void #Foreign("exit")
-:stderr pointer #Foreign("stderr")
 :stdout pointer #Foreign("stdout")
-fprintf(fp pointer #As("FILE *"), fmt cstring) int #Foreign("fprintf") #VarArgs
 fflush(fp pointer #As("FILE *")) int #Foreign("fflush")
 
 Stdin {
@@ -13,16 +11,6 @@ Stdin {
         read := fread(buffer, 1, checked_cast(numBytes, uint), stdin)
         assert(read == cast(numBytes, uint))
         return string.from(buffer, numBytes)
-    }
-}
-
-Stderr {
-    write(s string) {
-        fprintf(stderr, "%.*s", s.length, s.dataPtr)
-    }
-
-    writeLine(s string) {
-        fprintf(stderr, "%.*s\n", s.length, s.dataPtr)
     }
 }
 
@@ -257,6 +245,17 @@ sendMessage(s string) {
     assert(fflush(stdout) == 0)
 }
 
+ResolvePathContext struct {
+    rootPath string
+}
+
+resolvePath(path string, ctx *ResolvePathContext) {
+    if Path.isAbsolutePath(path) {
+        return Path.simplify(path)
+    }
+    return Path.simplify(Path.combine(ctx.rootPath, path))
+}
+
 handleInitialize(obj Map<string, JsonValue>, ws Workspace, args ServerArgs) {
     id := int.tryParse(obj.get("id").as(*JsonOtherValue)^.value).unwrap()
 
@@ -264,19 +263,21 @@ handleInitialize(obj Map<string, JsonValue>, ws Workspace, args ServerArgs) {
 
     prev := Memory.pushAllocator(::documentAllocator.iAllocator_escaping())
 
-    rootUriNode := params.getOrDefault("rootUri")
-    rootPath := rootUriNode != null ? Path.fromFileUri(rootUriNode.as(*string)^) : params.get("rootPath").as(*string)^
+    rootPath := ""
+    if args.rootPath != "" {
+        rootPath = args.rootPath
+        debugMessage(format("Root path (from command line): {}\n", rootPath))
+    } else {
+        rootUriNode := params.getOrDefault("rootUri")
+        rootPath = rootUriNode != null ? Path.fromFileUri(rootUriNode.as(*string)^) : params.get("rootPath").as(*string)^
+        debugMessage(format("Root path (from workspace): {}\n", rootPath))
+    }
 
-    isAbsolutePath := Path.isAbsolutePath(args.argsPath)
-    argsPath := Path.simplify(Path.combine(isAbsolutePath ? "" : rootPath, args.argsPath))
-    sourceRootPath := Path.simplify(Path.combine(isAbsolutePath ? "" : rootPath, Path.getDirectoryName(args.argsPath)))
-    
-    debugMessage(format("Workspace root path: {}\n", rootPath))
-    debugMessage(format("Args path: {}\n", argsPath))
-    debugMessage(format("Source root path: {}\n", sourceRootPath))
+    rootPath = Path.simplify(rootPath)
+    ctx := ResolvePathContext { rootPath: rootPath }
     
     errors := new List<ArgsParserError>{}
-    compileArgs := ArgsParser.parseArgsFile(args.argsPath, errors, format("{}/", sourceRootPath))
+    compileArgs := ArgsParser.parseArgsFile(args.argsPath, errors, pointer_cast(resolvePath, fun<string, pointer, string>), pointer_cast(ref ctx, pointer))
 
     if errors.count > 0 {
         for e in errors {
@@ -295,7 +296,7 @@ handleInitialize(obj Map<string, JsonValue>, ws Workspace, args ServerArgs) {
 
         doc := new Document {
             path: si.path,
-            absPath: Path.simplify(Path.combine(sourceRootPath, si.path)),
+            absPath: resolvePath(si.path, ref ctx),
             text: text,
             lineStart: new List<int>{}
         }
@@ -550,14 +551,24 @@ main() {
 
     Tag.static_init()
 
-    argsArray := Environment.getCommandLineArgs()
-    argsString := string.join(" ", ref argsArray.slice(1, argsArray.count))
-    errors := new List<ArgsParserError>{}
-    args := ServerArgsParser.parse(argsString, errors)
+    // Compatibility hack: if all args are passed as a single string, split into individual args first
+    commandLineArgs := Environment.getCommandLineArgs()
+    if commandLineArgs.count == 2 && commandLineArgs[1].startsWith("--args ") {
+        parsedCommandLineArgs := new commandLineArgs[1].split(' ')
+        newCommandLineArgs := new Array<string>(parsedCommandLineArgs.count + 1)
+        newCommandLineArgs[0] = commandLineArgs[0]
+        parsedCommandLineArgs.copySlice(0, parsedCommandLineArgs.count, newCommandLineArgs, 1)
+        commandLineArgs = newCommandLineArgs
+    }
+
+    errors := new List<CommandLineArgsParserError>{}
+    parser := new CommandLineArgsParser.from(commandLineArgs, errors)
+    args := parseArgs(parser)
     
     if errors.count > 0 {
-        for e in errors {
-            Stderr.writeLine(e.text)
+        info := parser.getCommandLineInfo()
+        for errors {
+            Stderr.writeLine(CommandLineArgsParser.getErrorDesc(it, info))
         }
         return
     }

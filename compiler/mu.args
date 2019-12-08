@@ -6,6 +6,7 @@
 ../lib/memory.mu
 ../lib/stdio.mu
 ../lib/sort.mu
+../lib/range.mu
 ast.mu
 ast_printer.mu
 range_finder.mu
@@ -19,5 +20,6 @@ c_generator.mu
 c_generator_builtin.mu
 args_parser.mu
 cpu_time_stopwatch.mu
+command_line_args_parser.mu
 mu.mu
 --output-file mu.c
