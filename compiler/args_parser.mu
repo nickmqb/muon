@@ -252,9 +252,13 @@ ArgsParser {
 	
 	error(s ArgsParserState, text string) {
 		if s.path == "" {
-			parser := s.commandLineParser
-			arg := parser.args[parser.index - 1]
-			s.errors.add(ArgsParserError { commandLineError: CommandLineArgsParserError { index: parser.index - 1, innerSpan: IntRange(0, arg.length), text: text }, text: text })
+			if s.commandLineParser != null {
+				parser := s.commandLineParser
+				arg := parser.args[parser.index - 1]
+				s.errors.add(ArgsParserError { commandLineError: CommandLineArgsParserError { index: parser.index - 1, innerSpan: IntRange(0, arg.length), text: text }, text: text })
+			} else {
+				s.errors.add(ArgsParserError { text: text })
+			}
 		} else {
 			s.errors.add(ArgsParserError { path: s.path, source: s.source, span: s.tokenSpan, text: text })
 		}
