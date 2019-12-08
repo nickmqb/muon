@@ -270,7 +270,7 @@ handleInitialize(obj Map<string, JsonValue>, ws Workspace, args ServerArgs) {
     } else {
         rootUriNode := params.getOrDefault("rootUri")
         rootPath = rootUriNode != null ? Path.fromFileUri(rootUriNode.as(*string)^) : params.get("rootPath").as(*string)^
-        debugMessage(format("Root path (from workspace): {}\n", rootPath))
+        debugMessage(format("Root path (from language client): {}\n", rootPath))
     }
 
     rootPath = Path.simplify(rootPath)
