@@ -1,10 +1,12 @@
 printf(fmt cstring) int #Foreign("printf") #VarArgs
 :stdin pointer #Foreign("stdin")
+:stderr pointer #Foreign("stderr")
 fgets(s pointer #As("char *"), size int, stream pointer #As("FILE *")) pointer #Foreign("fgets")
 fopen(pathname cstring, mode cstring) pointer #Foreign("fopen")
 fread(ptr pointer, size usize, nmemb usize, stream pointer #As("FILE *")) usize #Foreign("fread")
 feof(stream pointer #As("FILE *")) int #Foreign("feof")
 fwrite(ptr pointer, size usize, nmemb usize, stream pointer #As("FILE *")) usize #Foreign("fwrite")
+fprintf(fp pointer #As("FILE *"), fmt cstring) int #Foreign("fprintf") #VarArgs
 fclose(stream pointer #As("FILE *")) int #Foreign("fclose")
 
 Stdout {
@@ -14,6 +16,16 @@ Stdout {
 
 	writeLine(s string) {
 		printf("%.*s\n", s.length, s.dataPtr)
+	}
+}
+
+Stderr {
+	write(s string) {
+		fprintf(stderr, "%.*s", s.length, s.dataPtr)
+	}
+
+	writeLine(s string) {
+		fprintf(stderr, "%.*s\n", s.length, s.dataPtr)
 	}
 }
 
