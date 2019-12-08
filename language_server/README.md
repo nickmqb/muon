@@ -27,11 +27,10 @@ If you've created a Muon extension/plugin for an editor, or if you have written 
 
 1. Navigate to the `language_server` directory
 2. Compile:
-	* On Linux/macOS: `mu --args language_server.args`
-	* On Windows: `mu --args language_server_win32.args`
+	* On Linux/macOS: `mu --args language_server_linux_macos.args`
+	* On Windows: `mu --args language_server_windows.args`
+	* _Note_: make sure to use the right file for your OS, otherwise the language server may compile, but may not work properly.
 3. Compile the resulting `language_server.c` file with a C compiler of your choice
-
-**Important note for Windows users**: You _must_ use `language_server_win32.args` (`language_server.args` will compile, but the server will not work properly).
 
 ### Run
 
@@ -39,7 +38,7 @@ The server requires a single command line argument: `--args [path]`. This must b
 
 The source files that are listed in the args file will be processed by the language server. Source files not listed in the args file don't get language server support.
 
-**Important notes**: The args path _must not contain any spaces_. If you specify a relative path, it will be interpreted as being relative to the `rootPath`, which is provided by the editor and sent to the language server. For example, VS Code sets the rootPath to the path of the first folder in the workspace. Also, all source file paths in the args file _must be relative paths_.
+_Note_: Relative .args paths and relative source file paths (inside the .args file) will be interpreted as being relative to the 'root path', which is provided by the editor and sent to the language server. For example, VS Code sets the root path to the path of the first folder in the workspace. You can override the root path with `--root-path [path]`.
 
 ### Troubleshooting
 
