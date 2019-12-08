@@ -978,6 +978,10 @@ TypeChecker {
 						return result
 					}
 				}
+				if (rlTag.ti.flags & TypeFlags.typeParam) != 0 {
+					c.errors.add(Error.at(c.unit, rhs.span, format("Undefined member: {}.{}", rl.tag.ti.name, rhs.value)))
+					return ResolveResult{}
+				}
 				mem = rlTag.ti.members.getOrDefault(rhs.value)
 				match mem {
 					Namespace: {
