@@ -347,3 +347,5 @@ compiler/*.bat
 compiler/*.code-workspace
 language_server/*.bat
 language_server/*.code-workspace
+ffigen/*.bat
+ffigen/*.code-workspace
