@@ -9,6 +9,10 @@ Array<T> struct #RefType {
 		return result
 	}
 
+	fromTypedPtr(dataPtr *T, count int) {
+		return Array<T> { dataPtr: pointer_cast(dataPtr, pointer), count: count }
+	}
+
 	createUninitialized<T>(count int) {
 		numBytes := CheckedMath.mulPositiveSsize(count, sizeof(T))
 		return Array<T> { dataPtr: ::currentAllocator.alloc(numBytes), count: count }

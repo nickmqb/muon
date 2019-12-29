@@ -54,6 +54,19 @@ string {
 		return true
 	}
 	
+	endsWith(s string, suffix string) {
+		if s.length < suffix.length {
+			return false
+		}
+		from := s.length - suffix.length
+		for i := 0; i < suffix.length {
+			if s[from + i] != suffix[i] {
+				return false
+			}
+		}
+		return true
+	}
+
 	startsWith_ignoreCase(s string, prefix string) {
 		if s.length < prefix.length {
 			return false
@@ -126,6 +139,26 @@ string {
 		return rb.compactToString()
 	}
 	
+	indexOf(s string, sub string) {
+		to := s.length - sub.length
+		for i := 0; i <= to {
+			j := i
+			k := 0
+			while k < sub.length {
+				if s[j] == sub[k] {
+					j += 1
+					k += 1
+				} else {
+					break
+				}
+			}
+			if k == sub.length {
+				return i
+			}
+		}
+		return -1
+	}
+
 	indexOfChar(s string, ch char) {
 		for i := 0; i < s.length {
 			if s[i] == ch {

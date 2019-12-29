@@ -361,7 +361,7 @@ double {
 		max := 64
 		sb.reserveForWrite(max)
 		// TODO: we probably want a locale independent way to convert floating point numbers
-		size := snprintf_(sb.dataPtr + sb.count, cast(max, uint), "%lf", val)
+		size := snprintf_(sb.dataPtr + sb.count, cast(max, uint), "%.17g", val)
 		assert(0 < size && size < max)
 		sb.count += size
 	}
