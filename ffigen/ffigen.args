@@ -1,0 +1,16 @@
+../lib/core.mu
+../lib/basic.mu
+../lib/stdio.mu
+../lib/string.mu
+../lib/containers.mu
+../lib/memory.mu
+../lib/environment.mu
+../lib/range.mu
+../compiler/command_line_args_parser.mu
+libclang.mu
+util.mu
+rules.mu
+args_parser.mu
+main.mu
+-m64
+--output-file ffigen.c
