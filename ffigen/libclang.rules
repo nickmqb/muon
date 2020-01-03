@@ -1,0 +1,10 @@
+CX* const
+CX* enum
+CX* struct
+clang_*
+enum CX*
+struct CX*
+clang_getCString fun prefer_cstring
+clang_EvalResult_getAsStr fun prefer_cstring
+struct CXUnsavedFile prefer_cstring
+clang_parseTranslationUnit fun prefer_cstring

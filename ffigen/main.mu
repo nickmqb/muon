@@ -56,7 +56,7 @@ getCursorLocationString(cursor CXCursor) {
 
 
 AppState struct #RefType {
-	clangTranslationUnit pointer
+	clangTranslationUnit CXTranslationUnit
 	isPlatformAgnostic bool
 	rules List<Rule>
 	ruleLookup List<RuleLookupNode>
@@ -81,7 +81,7 @@ UnwrapPointerTypeResult struct {
 
 unwrapPointerType(type CXType) {
 	num := 0
-	while type.kind == CXType_Pointer {
+	while type.kind == CXTypeKind.CXType_Pointer {
 		type = clang_getPointeeType(type)
 		num += 1
 	}
@@ -90,7 +90,7 @@ unwrapPointerType(type CXType) {
 
 bestTypenameDiscoveryPass(cursor CXCursor, parent CXCursor, state AppState) int {
 	kind := clang_getCursorKind(cursor)
-	if kind == CXCursor_TypedefDecl {
+	if kind == CXCursorKind.CXCursor_TypedefDecl {
 		type := clang_getCursorType(cursor)
 		typedefName := convertString(clang_getTypeSpelling(type))
 		canonicalTypeInfo := unwrapPointerType(clang_getCanonicalType(type))
@@ -104,7 +104,7 @@ bestTypenameDiscoveryPass(cursor CXCursor, parent CXCursor, state AppState) int 
 				}
 			}
 		}
-	} else if kind == CXCursor_MacroDefinition {
+	} else if kind == CXCursorKind.CXCursor_MacroDefinition {
 		if clang_Cursor_isMacroFunctionLike(cursor) == 0 {
 			name := convertString(clang_getCursorSpelling(cursor))
 			rule := findRule(name, 0, RuleType.const, state.ruleLookup)
@@ -214,7 +214,7 @@ MapStructContext struct {
 
 mapField(name string, type CXType, ctx *MapStructContext) {
 	if ctx.isDone {
-		if type.kind == CXType_ConstantArray {
+		if type.kind == CXTypeKind.CXType_ConstantArray {
 			elementType := clang_getArrayElementType(type)
 			if clang_Cursor_isAnonymous(clang_getTypeDeclaration(elementType)) == 0 {
 				mapType(elementType, ctx.mapTypeFlags, ctx.state)
@@ -226,7 +226,7 @@ mapField(name string, type CXType, ctx *MapStructContext) {
 	}
 
 	rb := ctx.rb
-	if type.kind == CXType_ConstantArray {
+	if type.kind == CXTypeKind.CXType_ConstantArray {
 		elementType := clang_getArrayElementType(type)
 		numElements := clang_getNumElements(type)
 		for i := 0_L; i < numElements {
@@ -263,12 +263,12 @@ mapStructField(cursor CXCursor, ctx *MapStructContext) int {
 	maybeSizeInBytes := tryGetSizeOfTypeInBytes(type)
 	offset := getOffsetOfFieldInBits(cursor) / 8
 	isNested := clang_Cursor_isAnonymous(clang_getTypeDeclaration(type)) != 0
-	isArrayNested := type.kind == CXType_ConstantArray && clang_Cursor_isAnonymous(clang_getTypeDeclaration(clang_getArrayElementType(type))) != 0
+	isArrayNested := type.kind == CXTypeKind.CXType_ConstantArray && clang_Cursor_isAnonymous(clang_getTypeDeclaration(clang_getArrayElementType(type))) != 0
 
 	//rb.write(format("\t//offset of {}: {}\n", name, offsetInBits))
 
 	if !ctx.isDone {
-		if clang_Cursor_isBitField(cursor) != 0 || offset == ctx.lastOffset || !maybeSizeInBytes.hasValue || isArrayNested || type.kind == CXType_LongDouble {
+		if clang_Cursor_isBitField(cursor) != 0 || offset == ctx.lastOffset || !maybeSizeInBytes.hasValue || isArrayNested || type.kind == CXTypeKind.CXType_LongDouble {
 			ctx.isDone = true
 			for i := ctx.lastOffset + ctx.lastSizeInBytes; i < ctx.sizeInBytes {
 				rb.write("\t")
@@ -368,7 +368,7 @@ MapEnumContext struct {
 
 mapEnumMember(cursor CXCursor, parent CXCursor, ctx *MapEnumContext) int {
 	state := ctx.state
-	if cursor.kind == CXCursor_EnumConstantDecl {
+	if cursor.kind == CXCursorKind.CXCursor_EnumConstantDecl {
 		name := convertString(clang_getCursorSpelling(cursor))
 		origValue := clang_getEnumConstantDeclValue(cursor)
 
@@ -460,19 +460,19 @@ MapTypeFlags enum #Flags {
 }
 
 mapNonPointerType(type CXType, state AppState) {
-	if type.kind == CXType_SChar || type.kind == CXType_Char_S {
+	if type.kind == CXTypeKind.CXType_SChar || type.kind == CXTypeKind.CXType_Char_S {
 		return MappedType { type: "sbyte" }
-	} else if type.kind == CXType_UChar || type.kind == CXType_Char_U {
+	} else if type.kind == CXTypeKind.CXType_UChar || type.kind == CXTypeKind.CXType_Char_U {
 		return MappedType { type: "byte" }
-	} else if type.kind == CXType_Short {
+	} else if type.kind == CXTypeKind.CXType_Short {
 		return MappedType { type: "short" }
-	} else if type.kind == CXType_UShort {
+	} else if type.kind == CXTypeKind.CXType_UShort {
 		return MappedType { type: "ushort" }
-	} else if type.kind == CXType_Int {
+	} else if type.kind == CXTypeKind.CXType_Int {
 		return MappedType { type: "int" }
-	} else if type.kind == CXType_UInt {
+	} else if type.kind == CXTypeKind.CXType_UInt {
 		return MappedType { type: "uint" }
-	} else if type.kind == CXType_Long {
+	} else if type.kind == CXTypeKind.CXType_Long {
 		size := getSizeOfTypeInBytes(type)
 		if size == 4 && !state.isPlatformAgnostic {
 			return MappedType { type: "int" }
@@ -481,7 +481,7 @@ mapNonPointerType(type CXType, state AppState) {
 		} else {
 			return MappedType { type: "FFIGEN_INVALID_TYPE_SIGNED_LONG", error: true }
 		}
-	} else if type.kind == CXType_ULong {
+	} else if type.kind == CXTypeKind.CXType_ULong {
 		size := getSizeOfTypeInBytes(type)
 		if size == 4 && !state.isPlatformAgnostic {
 			return MappedType { type: "uint" }
@@ -490,27 +490,27 @@ mapNonPointerType(type CXType, state AppState) {
 		} else {
 			return MappedType { type: "FFIGEN_INVALID_TYPE_UNSIGNED_LONG", error: true }
 		}
-	} else if type.kind == CXType_Float {
+	} else if type.kind == CXTypeKind.CXType_Float {
 		return MappedType { type: "float" }
-	} else if type.kind == CXType_Double {
+	} else if type.kind == CXTypeKind.CXType_Double {
 		return MappedType { type: "double" }
-	} else if type.kind == CXType_LongLong {
+	} else if type.kind == CXTypeKind.CXType_LongLong {
 		return MappedType { type: "long" }
-	} else if type.kind == CXType_ULongLong {
+	} else if type.kind == CXTypeKind.CXType_ULongLong {
 		return MappedType { type: "ulong" }
 	}
-	return MappedType { type: format("FFIGEN_UNKNOWN_TYPE_{}", type.kind), error: true }
+	return MappedType { type: format("FFIGEN_UNKNOWN_TYPE_{}", cast(type.kind, uint)), error: true }
 }
 
 mapType(type_ CXType, flags MapTypeFlags, state AppState) MappedType {
 	info := unwrapPointerType(clang_getCanonicalType(type_))
-	if info.type.kind == CXType_Void {
+	if info.type.kind == CXTypeKind.CXType_Void {
 		if info.numPtr > 0 {
 			return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr - 1), "pointer") }
 		} else {
 			return MappedType { type: "void" }
 		}
-	} else if info.type.kind == CXType_Record {
+	} else if info.type.kind == CXTypeKind.CXType_Record {
 		name := stripConstUnaligned(convertString(clang_getTypeSpelling(info.type)))
 		newName := state.rename.getOrDefault(name)
 		if newName != "" {
@@ -524,7 +524,7 @@ mapType(type_ CXType, flags MapTypeFlags, state AppState) MappedType {
 		}
 		cursor := clang_getTypeDeclaration(info.type)
 		if clang_Cursor_isAnonymous(cursor) != 0 {
-			return MappedType { type: format("{}UNKNOWN_TYPE_{}", string.repeatChar('*', info.numPtr), info.type.kind), error: true }
+			return MappedType { type: format("{}UNKNOWN_TYPE_{}", string.repeatChar('*', info.numPtr), cast(info.type.kind, uint)), error: true }
 		}
 		if name.startsWith("struct ") {
 			return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr), mapStruct(name, name.stripPrefix("struct "), info.type, MapStructFlags.none, state)), marshal: true }
@@ -533,7 +533,7 @@ mapType(type_ CXType, flags MapTypeFlags, state AppState) MappedType {
 			return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr), mapStruct(name, name.stripPrefix("union "), info.type, MapStructFlags.none, state)), marshal: true }
 		}
 		return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr), mapStruct(name, name, info.type, MapStructFlags.none, state)), marshal: true }
-	} else if info.type.kind == CXType_Enum {
+	} else if info.type.kind == CXTypeKind.CXType_Enum {
 		cursor := clang_getTypeDeclaration(info.type)
 		name := stripConstUnaligned(convertString(clang_getTypeSpelling(info.type)))
 		newName := state.rename.getOrDefault(name)
@@ -544,13 +544,13 @@ mapType(type_ CXType, flags MapTypeFlags, state AppState) MappedType {
 			return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr), mapEnum(name, name.stripPrefix("enum "), cursor, state)), marshal: true }
 		}
 		return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr), mapEnum(name, name, cursor, state)), marshal: true }
-	} else if info.type.kind == CXType_ConstantArray || info.type.kind == CXType_IncompleteArray {
+	} else if info.type.kind == CXTypeKind.CXType_ConstantArray || info.type.kind == CXTypeKind.CXType_IncompleteArray {
 		elementType := clang_getArrayElementType(info.type)
 		mapped := mapType(elementType, MapTypeFlags.none, state)
 		return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr + 1), mapped.type), marshal: mapped.marshal }
-	} else if (info.type.kind == CXType_FunctionProto || info.type.kind == CXType_FunctionNoProto) {
-		return MappedType { type: format("{}{}", string.repeatChar('*', max(0, info.numPtr - 1)), "pointer") }
-	} else if (flags & MapTypeFlags.prefer_cstring) != 0 && (info.type.kind == CXType_SChar || info.type.kind == CXType_Char_S) && info.numPtr > 0 {
+	} else if (info.type.kind == CXTypeKind.CXType_FunctionProto || info.type.kind == CXTypeKind.CXType_FunctionNoProto) {
+		return MappedType { type: format("{}{}", string.repeatChar('*', max(0, info.numPtr - 1)), "pointer"), marshal: true }
+	} else if (flags & MapTypeFlags.prefer_cstring) != 0 && (info.type.kind == CXTypeKind.CXType_SChar || info.type.kind == CXTypeKind.CXType_Char_S) && info.numPtr > 0 {
 		return MappedType { type: format("{}{}", string.repeatChar('*', max(0, info.numPtr - 1)), "cstring") }
 	} else {
 		mapped := mapNonPointerType(info.type, state)
@@ -729,7 +729,7 @@ generateConst(name string, cursor CXCursor, rule Rule, state AppState) {
 	rb.write(name)
 	rb.write(" ")
 
-	if kind == CXEval_Int {
+	if kind == CXEvalResultKind.CXEval_Int {
 		if clang_EvalResult_isUnsignedInt(evalResult) == 0 {
 			value := clang_EvalResult_getAsLongLong(evalResult)
 			rb.write(targetType)
@@ -743,13 +743,13 @@ generateConst(name string, cursor CXCursor, rule Rule, state AppState) {
 			value.writeTo(rb)
 			rb.write(getSuffix(targetType))
 		}
-	} else if kind == CXEval_Float {
+	} else if kind == CXEvalResultKind.CXEval_Float {
 		value := clang_EvalResult_getAsDouble(evalResult)
 		rb.write(targetType)
 		rb.write(" = ")
 		value.writeTo(rb)
 		rb.write(getSuffix(targetType))
-	} else if kind == CXEval_StrLiteral {
+	} else if kind == CXEvalResultKind.CXEval_StrLiteral {
 		value := clang_EvalResult_getAsStr(evalResult)
 		rb.write("string = \"")
 		rb.writeUnescapedString(string.from_cstring(value))
@@ -801,11 +801,11 @@ generateVar(name string, cursor CXCursor, rule Rule, state AppState) {
 
 generatePass(cursor CXCursor, parent CXCursor, state AppState) int {
 	kind := clang_getCursorKind(cursor)
-	if kind == CXCursor_UnexposedDecl {
+	if kind == CXCursorKind.CXCursor_UnexposedDecl {
 		// This could be an "extern "C"" declaration, so always recurse into unexposed decls
 		return CXChildVisit_Recurse
 	
-	} else if kind == CXCursor_FunctionDecl {
+	} else if kind == CXCursorKind.CXCursor_FunctionDecl {
 		name := convertString(clang_getCursorSpelling(cursor))
 		rule := findRule(name, 0, RuleType.function, state.ruleLookup)
 		if rule != null {
@@ -815,10 +815,10 @@ generatePass(cursor CXCursor, parent CXCursor, state AppState) int {
 			rule.isMatched = true	
 		}
 	
-	} else if kind == CXCursor_TypedefDecl {
+	} else if kind == CXCursorKind.CXCursor_TypedefDecl {
 		name := convertString(clang_getCursorSpelling(cursor))
 		info := unwrapPointerType(clang_getCanonicalType(clang_getCursorType(cursor)))
-		rule := findRule(name, 0, info.type.kind == CXType_Enum ? RuleType.enum_ : RuleType.struct_, state.ruleLookup)
+		rule := findRule(name, 0, info.type.kind == CXTypeKind.CXType_Enum ? RuleType.enum_ : RuleType.struct_, state.ruleLookup)
 		if rule != null {
 			if rule.type != RuleType.skip {
 				type := clang_getCursorType(cursor)
@@ -827,7 +827,7 @@ generatePass(cursor CXCursor, parent CXCursor, state AppState) int {
 			rule.isMatched = true	
 		}
 	
-	} else if kind == CXCursor_StructDecl || kind == CXCursor_UnionDecl {
+	} else if kind == CXCursorKind.CXCursor_StructDecl || kind == CXCursorKind.CXCursor_UnionDecl {
 		name := convertString(clang_getTypeSpelling(clang_getCursorType(cursor)))
 		rule := findRule(name, 0, RuleType.struct_, state.ruleLookup)
 		if rule != null {
@@ -838,7 +838,7 @@ generatePass(cursor CXCursor, parent CXCursor, state AppState) int {
 			rule.isMatched = true	
 		}
 
-	} else if kind == CXCursor_EnumDecl {
+	} else if kind == CXCursorKind.CXCursor_EnumDecl {
 		if clang_Cursor_isAnonymous(cursor) != 0 {
 			mapAnonymousEnum(cursor, state)
 		} else {
@@ -853,7 +853,7 @@ generatePass(cursor CXCursor, parent CXCursor, state AppState) int {
 			}
 		}
 
-	} else if kind == CXCursor_VarDecl {
+	} else if kind == CXCursorKind.CXCursor_VarDecl {
 		name := convertString(clang_getCursorSpelling(cursor))
 		type := clang_getCursorType(cursor)
 		if clang_isConstQualifiedType(type) != 0 {			
@@ -889,8 +889,8 @@ abandonHandler(code int) {
 
 parse(index pointer, sourcePath string, sourceText string, clangArgs Array<cstring>) {
 	unsavedFiles := new Array<CXUnsavedFile>(1)
-	unsavedFiles[0] = CXUnsavedFile { filename: sourcePath.alloc_cstring(), contents: sourceText.alloc_cstring(), length: checked_cast(sourceText.length, uint) }
-	unit := clang_parseTranslationUnit(index, sourcePath.alloc_cstring(), pointer_cast(clangArgs.dataPtr, *cstring), clangArgs.count, ref unsavedFiles[0], 1, CXTranslationUnit_DetailedPreprocessingRecord)
+	unsavedFiles[0] = CXUnsavedFile { Filename: sourcePath.alloc_cstring(), Contents: sourceText.alloc_cstring(), Length: checked_cast(sourceText.length, uint) }
+	unit := clang_parseTranslationUnit(index, sourcePath.alloc_cstring(), pointer_cast(clangArgs.dataPtr, *cstring), clangArgs.count, ref unsavedFiles[0], 1, cast(CXTranslationUnit_DetailedPreprocessingRecord, uint))
 	assert(unit != null)
 	return unit
 }
@@ -992,6 +992,7 @@ main() {
 	}
 
 	state.output = new StringBuilder{}
+	state.output.write("// Generated by ffigen 0.1.0\n")
 	cursor = clang_getTranslationUnitCursor(unit)
 	clang_visitChildren(cursor, pointer_cast(generatePass, pointer), pointer_cast(state, pointer))
 

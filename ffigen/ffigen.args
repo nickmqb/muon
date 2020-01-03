@@ -7,7 +7,7 @@
 ../lib/environment.mu
 ../lib/range.mu
 ../compiler/command_line_args_parser.mu
-libclang.mu
+libclang_windows.mu
 util.mu
 rules.mu
 args_parser.mu

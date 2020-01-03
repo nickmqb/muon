@@ -290,7 +290,7 @@ addNode(ch char, index int, nodes List<RuleLookupNode>) {
 	}
 }
 
-addRule(rule Rule, nodes List<RuleLookupNode>) {
+addRule(rule Rule, nodes List<RuleLookupNode>, s RuleParseState, ruleLine int) {
 	pattern := rule.pattern
 	hasStar := false
 	k := 0
@@ -307,7 +307,7 @@ addRule(rule Rule, nodes List<RuleLookupNode>) {
 					k = star
 				}
 			} else {
-				// TODO: subsequent stars get ignored, generate error for this
+				s.errors.add(RuleParseError { text: "At most one * is allowed per rule", line: ruleLine })
 			}
 			hasStar = true
 		} else {
@@ -344,12 +344,13 @@ parseRules(s string, errors List<RuleParseError>) {
 	readToken(st)
 
 	while st.token != "" {
+		ruleLine := st.line
 		rule := parseRule(st)
 		if rule.type == RuleType.none {
 			continue
 		}
 		rules.add(rule)
-		addRule(rule, lookup)
+		addRule(rule, lookup, st, ruleLine)
 		
 		//Stdout.writeLine(format("{} {}", rule.pattern, cast(rule.type, uint)))
 	}
