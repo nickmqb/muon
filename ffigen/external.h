@@ -6,4 +6,3 @@
 #include <stdio.h>
 #include <time.h>
 #include <clang-c/Index.h>
-#include <Windows.h>

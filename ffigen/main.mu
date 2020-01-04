@@ -1,5 +1,5 @@
 exit(status int) void #Foreign("exit")
-DebugBreak() void #Foreign("DebugBreak")
+//DebugBreak() void #Foreign("DebugBreak")
 
 convertString(str CXString) {
 	cstr := clang_getCString(str)
@@ -883,7 +883,7 @@ generatePass(cursor CXCursor, parent CXCursor, state AppState) int {
 
 abandonHandler(code int) {
 	Stdout.writeLine("Abandoned")
-	DebugBreak()
+	//DebugBreak()
 	exit(1)
 }
 
