@@ -63,7 +63,7 @@ Ptr {
 fun {
 }
 
-:_64bit bool #Foreign("_64bit")
+:_32bit bool #Foreign("_32bit")
 
 IAllocator struct {
 	data pointer

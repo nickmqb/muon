@@ -65,7 +65,7 @@ CGenerator {
 		c.out.writeLine("#define _Thread_local __declspec(thread)")
 		c.out.writeLine("#define _Static_assert static_assert")
 		c.out.writeLine("#endif")
-		if (c.comp.flags & CompilationFlags.target64bit) != 0 {
+		if (c.comp.flags & CompilationFlags.target32bit) == 0 {
 			c.out.writeLine("_Static_assert(sizeof(uintptr_t) == 8, \"Must use 64-bit output target\");")
 		} else {
 			c.out.writeLine("_Static_assert(sizeof(uintptr_t) == 4, \"Must use 32-bit output target\");")
@@ -79,7 +79,7 @@ CGenerator {
 		c.out.writeLine("typedef uint32_t uint__;")
 		c.out.writeLine("typedef int64_t long__;")
 		c.out.writeLine("typedef uint64_t ulong__;")
-		if (c.comp.flags & CompilationFlags.target64bit) != 0 {
+		if (c.comp.flags & CompilationFlags.target32bit) == 0 {
 			c.out.writeLine("typedef int64_t ssize__;")
 			c.out.writeLine("typedef uint64_t usize__;")
 		} else {
@@ -1017,13 +1017,13 @@ CGenerator {
 				sb.write("0xffffffffffffffffuLL")
 			} else {
 				sb.write(format("{}u", opaqueValue))
-				if tag.ti.rank == 8 || (tag.ti.rank == 6 && (c.comp.flags & CompilationFlags.target64bit) != 0) {
+				if tag.ti.rank == 8 || (tag.ti.rank == 6 && (c.comp.flags & CompilationFlags.target32bit) == 0) {
 					sb.write("LL")
 				}
 			}
 		} else {
 			value := transmute(opaqueValue, long)
-			if tag.ti.rank == 8 || (tag.ti.rank == 6 && (c.comp.flags & CompilationFlags.target64bit) != 0) {
+			if tag.ti.rank == 8 || (tag.ti.rank == 6 && (c.comp.flags & CompilationFlags.target32bit) == 0) {
 				if value > long.minValue {
 					sb.write(format("{}LL", value))
 				} else {

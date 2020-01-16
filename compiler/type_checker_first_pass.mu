@@ -10,7 +10,7 @@ Compilation struct #RefType {
 
 CompilationFlags enum #Flags {
 	useArgcArgv
-	target64bit
+	target32bit
 }
 
 NamespaceMember tagged_pointer {

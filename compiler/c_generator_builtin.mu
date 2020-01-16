@@ -204,8 +204,8 @@ CGenerator {
 				sb.write("));")					
 				c.out.writeLine(sb.toString())
 			} else {				
-				fromRank := from.ti.rank != 6 ? from.ti.rank : ((c.comp.flags & CompilationFlags.target64bit) != 0 ? 8 : 4)
-				toRank := to.ti.rank != 6 ? to.ti.rank : ((c.comp.flags & CompilationFlags.target64bit) != 0 ? 8 : 4)
+				fromRank := from.ti.rank != 6 ? from.ti.rank : ((c.comp.flags & CompilationFlags.target32bit) == 0 ? 8 : 4)
+				toRank := to.ti.rank != 6 ? to.ti.rank : ((c.comp.flags & CompilationFlags.target32bit) == 0 ? 8 : 4)
 				if (to.ti.flags & TypeFlags.unsigned) != 0 {
 					// signed -> unsigned
 					if toRank >= fromRank {
@@ -261,7 +261,7 @@ CGenerator {
 			if tag.ti == c.tags.ulong_.ti {
 				sb.write("0xffffffffffffffffuLL")
 			} else if tag.ti == c.tags.usize_.ti {
-				if (c.comp.flags & CompilationFlags.target64bit) != 0 {
+				if (c.comp.flags & CompilationFlags.target32bit) == 0 {
 					sb.write("0xffffffffffffffffuLL")
 				} else {
 					sb.write("0xffffffffu")
@@ -279,7 +279,7 @@ CGenerator {
 			if tag.ti == c.tags.long_.ti {
 				sb.write("0x7fffffffffffffffLL")
 			} else if tag.ti == c.tags.ssize_.ti {
-				if (c.comp.flags & CompilationFlags.target64bit) != 0 {
+				if (c.comp.flags & CompilationFlags.target32bit) == 0 {
 					sb.write("0x7fffffffffffffffuLL")
 				} else {
 					sb.write("0x7fffffffu")

@@ -1,10 +1,10 @@
 CompileArgs struct #RefType {
-	:compilerVersion = "0.3.3"
+	:compilerVersion = "0.3.4"
 	
 	sources List<SourceInfo>
 	includeFile string
 	outputFile string
-	target64bit bool
+	target32bit bool
 	noEntryPoint bool
 	buildCommand string	
 	runCommand string
@@ -90,10 +90,10 @@ ArgsParser {
 			} else if s.token == "--output-file" {
 				parseOutputFile(s)
 			} else if s.token == "-m32" {
-				s.args.target64bit = false
+				s.args.target32bit = true
 				readToken(s)
 			} else if s.token == "-m64" {
-				s.args.target64bit = true
+				s.args.target32bit = false
 				readToken(s)
 			} else if s.token == "--no-entry-point" {
 				s.args.noEntryPoint = true

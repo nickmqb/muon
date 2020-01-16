@@ -24,8 +24,8 @@ Interpreter {
 			sf.evaluatedValue = EvalResult { tag: sf.tag, opaqueValue: sf.value }
 		} else if (sf.flags & StaticFieldFlags.foreign) != 0 {
 			// TODO: avoid "magic" names here
-			if sf.name.value == "_64bit" {
-				sf.evaluatedValue = EvalResult { tag: c.tags.bool_, opaqueValue: (c.comp.flags & CompilationFlags.target64bit) != 0 ? 1_u : 0_u }
+			if sf.name.value == "_32bit" {
+				sf.evaluatedValue = EvalResult { tag: c.tags.bool_, opaqueValue: (c.comp.flags & CompilationFlags.target32bit) != 0 ? 1_u : 0_u }
 			} else {
 				sf.evaluatedValue = EvalResult { type: EvalResultType.generateForeign }
 			}
@@ -178,7 +178,7 @@ Interpreter {
 		if (from.ti.flags & TypeFlags.intval) == 0 || (to.ti.flags & TypeFlags.intval) == 0 {
 			return EvalResult { type: EvalResultType.failed }
 		}
-		toRank := to.ti.rank != 6 ? to.ti.rank : ((c.comp.flags & CompilationFlags.target64bit) != 0 ? 8 : 4)
+		toRank := to.ti.rank != 6 ? to.ti.rank : ((c.comp.flags & CompilationFlags.target32bit) == 0 ? 8 : 4)
 		if (to.ti.flags & TypeFlags.unsigned) != 0 {
 			return EvalResult { tag: to, opaqueValue: val.opaqueValue & rankToMask(toRank) }
 		} else {

@@ -152,8 +152,8 @@ compile(comp Compilation, args CompileArgs) {
 	Expander.expandPass2(expc)
 	//Expander.debug(comp.top)
 	genc := new CGenerator.createContext(comp)
-	if args.target64bit {
-		comp.flags |= CompilationFlags.target64bit
+	if args.target32bit {
+		comp.flags |= CompilationFlags.target32bit
 	}
 	CGenerator.generate(genc, args.includeFile, !args.noEntryPoint, CompileArgs.compilerVersion)
 
