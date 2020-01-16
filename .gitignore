@@ -341,6 +341,7 @@ ASALocalRun/
 compiler/*.c
 examples/*.c
 language_server/*.c
+ffigen/*.c
 
 # Custom msvc build scripts, workspaces
 compiler/*.bat
