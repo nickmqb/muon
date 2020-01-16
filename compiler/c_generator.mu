@@ -198,7 +198,7 @@ CGenerator {
 	
 	forwardStructVariant(c GenerateContext, tag Tag) {
 		sym := symTag(tag)
-		c.out.writeLine(format("typedef struct {}{} {};", sym, (c.comp.flags & CompilationFlags.hack_addStructSuffix) != 0 ? "0__" : "", sym))
+		c.out.writeLine(format("typedef struct tag_____{} {};", sym, sym))
 	}
 		
 	sdefPass(c GenerateContext) {
@@ -246,7 +246,7 @@ CGenerator {
 			}
 		}
 		sym := symTag(tag)
-		c.out.writeLine(format("typedef struct {}{} {{", sym, (c.comp.flags & CompilationFlags.hack_addStructSuffix) != 0 ? "0__" : ""))
+		c.out.writeLine(format("typedef struct tag_____{} {{", sym))
 		c.out.indent()
 		for fd in tag.ti.fields {
 			ftag := TypeChecker.closeTag(fd.tag, tag.ti.typeParamList, tag.args)

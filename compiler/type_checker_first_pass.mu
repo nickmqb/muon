@@ -11,7 +11,6 @@ Compilation struct #RefType {
 CompilationFlags enum #Flags {
 	useArgcArgv
 	target64bit
-	hack_addStructSuffix
 }
 
 NamespaceMember tagged_pointer {

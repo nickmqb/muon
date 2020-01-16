@@ -12,7 +12,6 @@ CompileArgs struct #RefType {
 	printStats bool
 	printVersion bool
 	printHelp bool
-	hack_addStructSuffix bool
 }
 
 SourceInfo struct {
@@ -113,9 +112,6 @@ ArgsParser {
 				readToken(s)
 			} else if s.token == "--help" {
 				s.args.printHelp = true
-				readToken(s)
-			} else if s.token == "--add-struct-suffix" {
-				s.args.hack_addStructSuffix = true
 				readToken(s)
 			} else if !s.token.startsWith("--") {
 				parseSourceFile(s)

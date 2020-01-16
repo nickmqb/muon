@@ -155,9 +155,6 @@ compile(comp Compilation, args CompileArgs) {
 	if args.target64bit {
 		comp.flags |= CompilationFlags.target64bit
 	}
-	if args.hack_addStructSuffix {
-		comp.flags |= CompilationFlags.hack_addStructSuffix
-	}
 	CGenerator.generate(genc, args.includeFile, !args.noEntryPoint, CompileArgs.compilerVersion)
 
 	generateTime := CpuTimeStopwatch.elapsed()
