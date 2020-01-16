@@ -11,5 +11,4 @@ util.mu
 rules.mu
 args_parser.mu
 main.mu
--m64
 --output-file ffigen.c
