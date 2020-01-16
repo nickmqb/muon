@@ -1,8 +1,8 @@
-malloc(size usize) pointer #Foreign("malloc")
-realloc(ptr pointer, new_size usize) pointer #Foreign("realloc")
-free(ptr pointer) void #Foreign("free")
-
 Memory {
+	malloc(size usize) pointer #Foreign("malloc")
+	realloc(ptr pointer, new_size usize) pointer #Foreign("realloc")
+	free(ptr pointer) void #Foreign("free")
+
 	newArenaAllocator(capacity ssize) {
 		prev := ::currentAllocator
 		::currentAllocator = heapAllocator()
@@ -85,7 +85,7 @@ ArenaAllocator struct #RefType {
 			return ptr
 		}	
 		newPtr := a.alloc(newSizeInBytes)
-		memcpy(newPtr, ptr, checked_cast(min(copySizeInBytes, newSizeInBytes), usize))
+		Memory.memcpy(newPtr, ptr, checked_cast(min(copySizeInBytes, newSizeInBytes), usize))
 		return newPtr
 	}
 	

@@ -1,6 +1,9 @@
 exit(code int) void #Foreign("exit")
-:stdout pointer #Foreign("stdout")
-fflush(fp pointer #As("FILE *")) int #Foreign("fflush")
+
+CStdlib {
+    :stdout pointer #Foreign("stdout")
+    fflush(fp pointer #As("FILE *")) int #Foreign("fflush")
+}
 
 Stdin {
     readBytesAsString(numBytes int) {
@@ -8,7 +11,7 @@ Stdin {
             return ""
         }
         buffer := ::currentAllocator.alloc(numBytes)
-        read := fread(buffer, 1, checked_cast(numBytes, uint), stdin)
+        read := CStdlib.fread(buffer, 1, checked_cast(numBytes, uint), CStdlib.stdin)
         assert(read == cast(numBytes, uint))
         return string.from(buffer, numBytes)
     }
@@ -24,12 +27,12 @@ debugMessage(s string) {
         logSocket.sendString(s)
     }
     if logFile != null {
-        fprintf(logFile, "%.*s", s.length, s.dataPtr)
-        fflush(logFile)
+        CStdlib.fprintf(logFile, "%.*s", s.length, s.dataPtr)
+        CStdlib.fflush(logFile)
     }
     if logStderr {
         Stderr.write(s)
-        fflush(stderr)
+        CStdlib.fflush(CStdlib.stderr)
     }
 }
 
@@ -118,14 +121,14 @@ List {
         assert(0 <= index && index <= list.count)
         newSize := CheckedMath.addPositiveInt(list.count, s.length)
         list.reserve(newSize)
-        memmove(list.dataPtr + index + s.length, list.dataPtr + index, cast(list.count - index, uint))
-        memcpy(list.dataPtr + index, s.dataPtr, cast(s.length, uint))
+        Memory.memmove(list.dataPtr + index + s.length, list.dataPtr + index, cast(list.count - index, uint))
+        Memory.memcpy(list.dataPtr + index, s.dataPtr, cast(s.length, uint))
         list.count += s.length
     }
 
     removeSlice(list List<char>, from int, to int) {
         assert(0 <= from && from <= to && to <= list.count)
-        memmove(list.dataPtr + from, list.dataPtr + to, cast(list.count - to, uint))
+        Memory.memmove(list.dataPtr + from, list.dataPtr + to, cast(list.count - to, uint))
         list.count -= (to - from)
     }
 
@@ -240,9 +243,9 @@ sendDiagnostics(ws Workspace) {
 
 sendMessage(s string) {
     msg := format("Content-Length: {}{}{}{}", s.length, newLine.unwrap(), newLine.unwrap(), s)
-    fprintf(stdout, "%.*s", msg.length, msg.dataPtr)
+    CStdlib.fprintf(CStdlib.stdout, "%.*s", msg.length, msg.dataPtr)
     //fprintf(stderr, "%.*s", msg.length, msg.dataPtr)
-    assert(fflush(stdout) == 0)
+    assert(CStdlib.fflush(CStdlib.stdout) == 0)
 }
 
 ResolvePathContext struct {
@@ -578,7 +581,7 @@ main() {
         ::logSocket = new TcpSocket.localClient(checked_cast(args.logPort, ushort))
     }
     if args.logFile {
-        ::logFile = fopen("muon_language_server.log", "w")
+        ::logFile = CStdlib.fopen("muon_language_server.log", "w")
         assert(::logFile != null)
     }
     ::logStderr = args.logStderr
@@ -652,6 +655,6 @@ main() {
         ::logSocket.close()
     }
     if ::logFile != null {
-        fclose(logFile)
+        CStdlib.fclose(logFile)
     }
 }

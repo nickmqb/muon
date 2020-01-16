@@ -1,31 +1,33 @@
-printf(fmt cstring) int #Foreign("printf") #VarArgs
-:stdin pointer #Foreign("stdin")
-:stderr pointer #Foreign("stderr")
-fgets(s pointer #As("char *"), size int, stream pointer #As("FILE *")) pointer #Foreign("fgets")
-fopen(pathname cstring, mode cstring) pointer #Foreign("fopen")
-fread(ptr pointer, size usize, nmemb usize, stream pointer #As("FILE *")) usize #Foreign("fread")
-feof(stream pointer #As("FILE *")) int #Foreign("feof")
-fwrite(ptr pointer, size usize, nmemb usize, stream pointer #As("FILE *")) usize #Foreign("fwrite")
-fprintf(fp pointer #As("FILE *"), fmt cstring) int #Foreign("fprintf") #VarArgs
-fclose(stream pointer #As("FILE *")) int #Foreign("fclose")
+CStdlib {
+	printf(fmt cstring) int #Foreign("printf") #VarArgs
+	:stdin pointer #Foreign("stdin")
+	:stderr pointer #Foreign("stderr")
+	fgets(s pointer #As("char *"), size int, stream pointer #As("FILE *")) pointer #Foreign("fgets")
+	fopen(pathname cstring, mode cstring) pointer #Foreign("fopen")
+	fread(ptr pointer, size usize, nmemb usize, stream pointer #As("FILE *")) usize #Foreign("fread")
+	feof(stream pointer #As("FILE *")) int #Foreign("feof")
+	fwrite(ptr pointer, size usize, nmemb usize, stream pointer #As("FILE *")) usize #Foreign("fwrite")
+	fprintf(fp pointer #As("FILE *"), fmt cstring) int #Foreign("fprintf") #VarArgs
+	fclose(stream pointer #As("FILE *")) int #Foreign("fclose")
+}
 
 Stdout {
 	write(s string) {
-		printf("%.*s", s.length, s.dataPtr)
+		CStdlib.printf("%.*s", s.length, s.dataPtr)
 	}
 
 	writeLine(s string) {
-		printf("%.*s\n", s.length, s.dataPtr)
+		CStdlib.printf("%.*s\n", s.length, s.dataPtr)
 	}
 }
 
 Stderr {
 	write(s string) {
-		fprintf(stderr, "%.*s", s.length, s.dataPtr)
+		CStdlib.fprintf(CStdlib.stderr, "%.*s", s.length, s.dataPtr)
 	}
 
 	writeLine(s string) {
-		fprintf(stderr, "%.*s\n", s.length, s.dataPtr)
+		CStdlib.fprintf(CStdlib.stderr, "%.*s\n", s.length, s.dataPtr)
 	}
 }
 
@@ -39,10 +41,10 @@ Stdin {
 		while true {
 			rb.reserveForWrite(blockSize)
 			from := rb.dataPtr + rb.count
-			ptr := fgets(from, blockSize, stdin)
+			ptr := CStdlib.fgets(from, blockSize, CStdlib.stdin)
 			if ptr == null {
 				rb.compactToString() // This frees the StringBuilder's dataPtr
-				if feof(stdin) != 0 {
+				if CStdlib.feof(CStdlib.stdin) != 0 {
 					return Result.fromError<string>(tryReadLine_eof)
 				} else {
 					return Result.fromError<string>(tryReadLine_ioError)
@@ -71,7 +73,7 @@ Stdin {
 
 File {
 	tryReadToStringBuilder(path string, out StringBuilder) {
-		fp := fopen(path.alloc_cstring(), "rb")
+		fp := CStdlib.fopen(path.alloc_cstring(), "rb")
 		// TODO: free allocated path cstring
 		if fp == null {
 			return false
@@ -79,7 +81,7 @@ File {
 		blockSize := 4096_u
 		while true {
 			out.reserveForWrite(cast(blockSize, int))
-			read := fread(out.dataPtr + out.count, 1, blockSize, fp)
+			read := CStdlib.fread(out.dataPtr + out.count, 1, blockSize, fp)
 			if read > 0 {
 				assert(read <= blockSize)
 				out.count += checked_cast(read, int)
@@ -87,17 +89,17 @@ File {
 				break
 			}
 		}		
-		if feof(fp) == 0 {
+		if CStdlib.feof(fp) == 0 {
 			return false
 		}
-		if fclose(fp) != 0 {
+		if CStdlib.fclose(fp) != 0 {
 			return false
 		}
 		return true
 	}
 	
 	tryWriteString(path string, data string) {
-		fp := fopen(path.alloc_cstring(), "wb")
+		fp := CStdlib.fopen(path.alloc_cstring(), "wb")
 		// TODO: free allocated path cstring
 		if fp == null {
 			return false
@@ -107,7 +109,7 @@ File {
 		i := 0_u
 		while i < len {
 			size := min(blockSize, len - i)
-			written := fwrite(data.dataPtr + i, 1, size, fp)
+			written := CStdlib.fwrite(data.dataPtr + i, 1, size, fp)
 			if written > 0 {
 				assert(written <= size)
 				i += cast(written, uint)
@@ -115,7 +117,7 @@ File {
 				return false
 			}
 		}
-		if fclose(fp) != 0 {
+		if CStdlib.fclose(fp) != 0 {
 			return false
 		}
 		return true

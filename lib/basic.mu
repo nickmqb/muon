@@ -1,7 +1,9 @@
-memcpy(dest pointer, src pointer, count usize) void #Foreign("memcpy")
-memmove(dest pointer, src pointer, count usize) void #Foreign("memmove")
-memset(s pointer, c int, n usize) void #Foreign("memset")
-memcmp(s1 pointer, s2 pointer, n usize) int #Foreign("memcmp")
+Memory {
+	memcpy(dest pointer, src pointer, count usize) void #Foreign("memcpy")
+	memmove(dest pointer, src pointer, count usize) void #Foreign("memmove")
+	memset(s pointer, c int, n usize) void #Foreign("memset")
+	memcmp(s1 pointer, s2 pointer, n usize) int #Foreign("memcmp")
+}
 
 sbyte {
 	:minValue = -128_sb
@@ -488,14 +490,14 @@ string {
 			return string{}
 		}
 		result := string { dataPtr: currentAllocator.alloc(length), length: length }
-		memcpy(result.dataPtr, dataPtr, checked_cast(length, usize))
+		Memory.memcpy(result.dataPtr, dataPtr, checked_cast(length, usize))
 		return result		
 	}
 	
 	alloc_cstring(s string) {
 		assert(s.length >= 0)
 		ptr := currentAllocator.alloc(s.length + 1)
-		memcpy(ptr, s.dataPtr, cast(s.length, usize))
+		Memory.memcpy(ptr, s.dataPtr, cast(s.length, usize))
 		pointer_cast(ptr + s.length, *byte)^ = 0
 		return pointer_cast(ptr, cstring)
 	}
@@ -559,7 +561,7 @@ StringBuilder struct #RefType {
 		if runway < s.length {
 			reserveForWrite(sb, s.length)
 		}
-		memcpy(sb.dataPtr + sb.count, s.dataPtr, cast(s.length, usize))
+		Memory.memcpy(sb.dataPtr + sb.count, s.dataPtr, cast(s.length, usize))
 		sb.count += s.length
 	}
 	

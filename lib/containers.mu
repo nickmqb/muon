@@ -5,7 +5,7 @@ Array<T> struct #RefType {
 	cons<T>(count int) {
 		numBytes := CheckedMath.mulPositiveSsize(count, sizeof(T))
 		result := Array<T> { dataPtr: ::currentAllocator.alloc(numBytes), count: count }
-		memset(result.dataPtr, 0, cast(numBytes, usize))
+		Memory.memset(result.dataPtr, 0, cast(numBytes, usize))
 		return result
 	}
 
@@ -27,11 +27,11 @@ Array<T> struct #RefType {
 		assert(0 <= from && from <= to && to <= src.count)
 		count := to - from
 		assert(0 <= index && index <= dest.count - count)
-		memcpy(dest.dataPtr + cast(index, ssize) * sizeof(T), src.dataPtr + cast(from, ssize) * sizeof(T), cast(cast(count, ssize) * sizeof(T), usize))
+		Memory.memcpy(dest.dataPtr + cast(index, ssize) * sizeof(T), src.dataPtr + cast(from, ssize) * sizeof(T), cast(cast(count, ssize) * sizeof(T), usize))
 	}
 	
 	clear(this Array<T>) {
-		memset(this.dataPtr, 0, cast(cast(this.count, ssize) * sizeof(T), usize))
+		Memory.memset(this.dataPtr, 0, cast(cast(this.count, ssize) * sizeof(T), usize))
 	}
 }
 
@@ -70,7 +70,7 @@ List<T> struct #RefType {
 		assert(0 <= index && index < this.count)
 		dest := this.dataPtr + cast(index, ssize) * sizeof(T)
 		src := dest + sizeof(T)
-		memmove(dest, src, cast(cast(this.count - (index + 1), ssize) * sizeof(T), usize))
+		Memory.memmove(dest, src, cast(cast(this.count - (index + 1), ssize) * sizeof(T), usize))
 		this.count -= 1
 	}
 	
