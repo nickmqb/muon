@@ -24,6 +24,7 @@ namespace MuonInterpreter {
                 "lib/stdio.mu",
                 "lib/memory.mu",
                 "lib/sort.mu",
+                "lib/range.mu",
                 "compiler/ast.mu",
                 "compiler/ast_printer.mu",
                 "compiler/range_finder.mu",
@@ -37,6 +38,7 @@ namespace MuonInterpreter {
                 "compiler/c_generator_builtin.mu",
                 "compiler/args_parser.mu",
                 "compiler/cpu_time_stopwatch.mu",
+                "compiler/command_line_args_parser.mu",
                 "compiler/mu.mu",
             }.Select(p => Path.Combine(rootPath, p)).ToArray();
             var units = compilerSources.Select(p => Parse(p)).ToArray();

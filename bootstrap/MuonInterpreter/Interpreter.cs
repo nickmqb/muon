@@ -354,6 +354,7 @@ namespace MuonInterpreter {
                             case List<object> a: return (long)a.Count;
                             case HashSet<object> a: return (long)a.Count;
                             case Map a: return (long)a.Dict.Count;
+                            case StringBuilder a: return (long)a.Length;
                         }
                         break;
                     }
@@ -801,6 +802,7 @@ namespace MuonInterpreter {
                 case "ulong": return (ulong)0;
                 case "string": return "";
                 case "pointer": return null;
+                case "fun": return null;
                 case "double": return (double)0;
                 case "bool": return false;
                 case "char": return '\0';
