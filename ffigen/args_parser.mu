@@ -1,14 +1,13 @@
 Args struct {
 	sourcePath string
-	clangArgs string
 	rulesPath string
 	outputPath string
-	includePaths List<string>
+	clangArgs List<string>
 	isPlatformAgnostic bool
 }
 
 parseArgs(parser CommandLineArgsParser) {
-	args := Args { includePaths: new List<string>{} }
+	args := Args { clangArgs: new List<string>{} }
 
 	hasSource := false
 	hasOutput := false
@@ -19,17 +18,15 @@ parseArgs(parser CommandLineArgsParser) {
 		if token == "--source" {
 			hasSource = true
 			args.sourcePath = parseString(parser, "path")
-		} else if token == "--clang-args" {
-			args.clangArgs = parseString(parser, "path")
 		} else if token == "--rules" {
 			args.rulesPath = parseString(parser, "path")
 		} else if token == "--output" {
 			hasOutput = true
 			args.outputPath = parseString(parser, "path")
-		} else if token == "--include-path" {
-			path := parseString(parser, "path")
-			if path != "" {
-				args.includePaths.add(path)
+		} else if token == "--clang-arg" {
+			arg := parseString(parser, "argument")
+			if arg != "" {
+				args.clangArgs.add(arg)
 			}
 		} else if token == "--platform-agnostic" {
 			args.isPlatformAgnostic = true

@@ -923,13 +923,8 @@ main() {
 	sourceText := readFile(args.sourcePath, "Could not read source file")
 	index := clang_createIndex(0, 0)
 
-	clangArgs_str := args.clangArgs.split_noEmptyEntries(' ') // TODO: Handle quotes
-	for p in args.includePaths {
-		clangArgs_str.add(format("-I{}", p))
-	}
-
-	clangArgs := new Array<cstring>(clangArgs_str.count)
-	for it, i in clangArgs_str {
+	clangArgs := new Array<cstring>(args.clangArgs.count)
+	for it, i in args.clangArgs {
 		clangArgs[i] = it.alloc_cstring()
 	}
 
@@ -1027,7 +1022,7 @@ ruleToString(r Rule) {
 
 ruleTypeToString(t RuleType) {
 	if t == RuleType.function {
-		return "func"
+		return "fun"
 	} else if t == RuleType.struct_ {
 		return "struct"
 	} else if t == RuleType.enum_ {

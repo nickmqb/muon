@@ -153,9 +153,14 @@ parseRule(s RuleParseState) {
 			rule.pattern = format("{} {}", first, s.token)
 			rule.type = (first == "struct" || first == "union") ? RuleType.struct_ : RuleType.enum_
 			readToken(s)
-			if rule.type == RuleType.struct_ && !s.isLineBreak && s.token == "prefer_cstring" {
-				rule.prefer_cstring = true
-				readToken(s)
+			if !s.isLineBreak {
+				if s.token == "skip" {
+					rule.type = RuleType.skip
+					readToken(s)
+				} else if rule.type == RuleType.struct_ && s.token == "prefer_cstring" {
+					rule.prefer_cstring = true
+					readToken(s)
+				}
 			}
 		} else {
 			s.errors.add(makeError(s, "Expected: identifier"))
