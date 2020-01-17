@@ -67,26 +67,20 @@ To get started with Muon, see [getting started](docs/getting_started.md). To lea
 
 Also, check out the [roadmap](docs/roadmap.md) to see which features are coming up.
 
-## Current state
-
-**Tools**
+## Tools
 
 * [Compiler](docs/getting_started.md): implements error recovery and has column accurate error reporting, which should make for a pleasant command line experience.
 * [Language server](https://github.com/nickmqb/muon/tree/master/language_server): provides interactive language features, such as symbol search, go to definition and as-you-type diagnostics.
 * [VSCode extension](https://github.com/nickmqb/vscode-muon): provides syntax highlighting and language features via the language server.
 * [More tools are planned](docs/roadmap.md).
 
-**Compiler output**. The compiler currently outputs C code.This means that we inherit C's undefined behavior model, which goes against the goals listed above! An LLVM backend is in the works which will avoid any undefined behavior.
+## Current state
 
-**Performance**. The compiler is fairly fast. The following numbers were obtained by compiling the Muon compiler (which is itself written in Muon), which is ~11.6K lines of code, on a 4Ghz core i7.  
+**Compiler backend**. The compiler currently outputs C code. This means that we inherit C's undefined behavior model, which goes against the goals listed above! An LLVM backend is in the works which will avoid any undefined behavior.
 
-* Parser: 2.4 million lines/second.
-* Type checker: 2.3 million lines/second.
-* Code generator: 1.6 million lines/second.
+**Performance**. The compiler is pretty fast. A basic benchmark -- compiling the Muon compiler (which is itself written in Muon), which is ~12K lines of code, on a 4Ghz core i7 -- shows a compilation speed of ~0.5 million lines/second. The compiler is single threaded right now and there's lots of room for further improvement. One major caveat: after the Muon compiler has finished, a C compiler still needs to run to generate the final binary, which usually takes up the most time. The LLVM backend will (hopefully) reduce this.
 
-The compiler is single threaded right now and there's lots of room for further improvement. One major caveat: after the above stages have finished, a C compiler still needs to run to generate the final binary, which usually takes up the most time. The LLVM backend will (hopefully) reduce this.
-
-**Supported platforms**. The main focus is on Windows, Linux and macOS. However, because the compiler generates C code, it should be able to target most platforms. Both 32-bit and 64-bit architectures are supported.
+**Supported platforms**. Muon aims to target all popular platforms, including Windows, macOS, Linux, iOS and Android. 64-bit architectures are the main focus ([more details](https://nickmqb.github.io/2020/01/17/shifting-muons-focus-to-64-bit.html)).
 
 ## Twitter
 
