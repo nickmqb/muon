@@ -26,7 +26,7 @@ If you've created a Muon extension/plugin for an editor, or if you have written 
 ### Build
 
 1. Navigate to the `language_server` directory.
-2. Build using either: `mu --args ffigen_linux_macos.args` or `mu --args ffigen_windows.args`, depending on your platform. Make sure to use the right file for your OS, otherwise the language server may compile, but may not work properly.
+2. Build using either: `mu --args language_server_linux_macos.args` or `mu --args language_server_windows.args`, depending on your platform. Make sure to use the right file for your OS, otherwise the language server may compile, but may not work properly.
 3. Compile the resulting `language_server.c` file with a C compiler of your choice.
 
 ### Run
