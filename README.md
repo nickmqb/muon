@@ -70,8 +70,9 @@ Also, check out the [roadmap](docs/roadmap.md) to see which features are coming 
 ## Tools
 
 * [Compiler](docs/getting_started.md): implements error recovery and has column accurate error reporting, which should make for a pleasant command line experience.
-* [Language server](https://github.com/nickmqb/muon/tree/master/language_server): provides interactive language features, such as symbol search, go to definition and as-you-type diagnostics.
+* [Language server](https://github.com/nickmqb/muon/tree/master/language_server/README.md): provides interactive language features, such as symbol search, go to definition and as-you-type diagnostics.
 * [VSCode extension](https://github.com/nickmqb/vscode-muon): provides syntax highlighting and language features via the language server.
+* [ffigen](https://github.com/nickmqb/muon/tree/master/ffigen/README.md): takes a .c/.h file and generates a corresponding .mu file with foreign interface declarations (a.k.a. bindings).
 * [More tools are planned](docs/roadmap.md).
 
 ## Current state
