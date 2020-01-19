@@ -1,0 +1,5 @@
+../lib/core.mu
+example_ffi.mu
+example.mu
+--include-file example.h
+--output-file example.c

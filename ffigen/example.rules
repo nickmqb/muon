@@ -1,0 +1,4 @@
+fopen fun prefer_cstring
+fprintf fun prefer_cstring
+printf fun prefer_cstring
+fclose
