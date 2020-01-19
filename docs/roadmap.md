@@ -46,7 +46,6 @@
 
 ### C interop
 
-* Auto-generate foreign declarations from .h files
 * Auto-generate .h file for .mu files
 * Support c unions
 * Support custom calling conventions 
