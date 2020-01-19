@@ -10,7 +10,7 @@ If you use ffigen it would be great if you could let me know how it goes by [fil
 
 ## Getting started
 
-1. Install libclang (which is part of [LLVM](https://llvm.org/)). Optionally, add the LLVM bin folder to your PATH.
+1. Install libclang. Optionally, add the LLVM bin folder to your PATH.
 2. Build using either: `mu --args ffigen_linux_macos.args` or `mu --args ffigen_windows.args`, depending on your platform.
 3. Compile ffigen.c using your favorite C compiler. Make sure that the compiler can find the libclang .h and library (.so or .lib) files.
 	* Example (Ubuntu, gcc): `mu --args ffigen_linux_macos.args && gcc -I/usr/lib/llvm-9/include -L/usr/lib/llvm-9/lib -o ffigen ffigen.c -lclang`
@@ -18,11 +18,11 @@ If you use ffigen it would be great if you could let me know how it goes by [fil
 
 ## Command line arguments
 
-`--input [path]`: Input file, typically a .c or .h file.
-`--rules [path]`: Rules file, see below.
-`--output [path]`: .mu output file.
-`--clang-arg [argument]`: An additional [argument to pass to clang](https://clang.llvm.org/docs/ClangCommandLineReference.html). This flag can be specified multiple times, once for each clang argument.
-`--platform-agnostic`: If set, ffigen attempts to generate a platform agnostic output file. If this is not possible, ffigen emits placeholders that prevent compilation of the generated .mu file.
+* `--input [path]`: Input file, typically a .c or .h file.
+* `--rules [path]`: Rules file, see below.
+* `--output [path]`: .mu output file.
+* `--clang-arg [argument]`: An additional [argument to pass to clang](https://clang.llvm.org/docs/ClangCommandLineReference.html). This flag can be specified multiple times, once for each clang argument.
+* `--platform-agnostic`: If set, ffigen attempts to generate a platform agnostic output file. If this is not possible, ffigen emits placeholders that prevent compilation of the generated .mu file.
 
 ## Rules file
 
