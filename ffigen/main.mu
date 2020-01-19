@@ -95,12 +95,16 @@ bestTypenameDiscoveryPass(cursor CXCursor, parent CXCursor, state AppState) int 
 		typedefName := convertString(clang_getTypeSpelling(type))
 		canonicalTypeInfo := unwrapPointerType(clang_getCanonicalType(type))
 		canonicalTypeName := convertString(clang_getTypeSpelling(canonicalTypeInfo.type))
-		if canonicalTypeName != typedefName && canonicalTypeName.indexOfChar(' ') >= 0 {
+		if canonicalTypeName != typedefName {
 			if canonicalTypeName.startsWith("struct ") || canonicalTypeName.startsWith("union ") || canonicalTypeName.startsWith("enum ") {
 				if canonicalTypeInfo.numPtr == 0 {
-					state.rename.tryAdd(canonicalTypeName, typedefName)
+					state.rename.addOrUpdate(canonicalTypeName, typedefName)
 				} else if canonicalTypeInfo.numPtr == 1 {
-					state.renamePtr.tryAdd(canonicalTypeName, typedefName)
+					state.renamePtr.addOrUpdate(canonicalTypeName, typedefName)
+				}
+			} else {
+				if canonicalTypeInfo.numPtr == 0 {
+					state.rename.addOrUpdate(canonicalTypeName, typedefName)
 				}
 			}
 		}
@@ -785,7 +789,7 @@ generateVar(name string, cursor CXCursor, rule Rule, state AppState) {
 	type := clang_getCursorType(cursor)
 	typeName := convertString(clang_getTypeSpelling(type))	
 	mapped := mapType(type, MapTypeFlags.none, state)
-	if !mapped.error && !mapped.marshal {
+	if !mapped.error && (!mapped.marshal || mapped.type.startsWith("*")) {
 		rb.write(mapped.type)
 		rb.write(" #Mutable #Foreign(\"")
 		rb.write(name)
