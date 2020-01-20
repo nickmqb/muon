@@ -115,7 +115,8 @@ string {
 		rb := StringBuilder{}
 		last := 0
 		i := 0
-		while i < s.length {
+		to := s.length - sub.length
+		while i <= to {
 			j := i
 			k := 0
 			while k < sub.length {
