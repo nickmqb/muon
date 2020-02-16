@@ -1,1 +1,1 @@
---args language_server_shared.args socket_stub.mu path_linux_macos.mu
+--args language_server_shared.args socket_stub.mu path_linux_macos.mu crashhandler_stub.mu

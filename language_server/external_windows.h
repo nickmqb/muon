@@ -6,3 +6,4 @@
 #include <stdio.h>
 #include <time.h>
 #include <Windows.h>
+#include <dbghelp.h>

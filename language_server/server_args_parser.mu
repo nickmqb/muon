@@ -1,6 +1,7 @@
 ServerArgs struct #RefType {
 	argsPath string
 	rootPath string
+	crashDumpPath string
 	logPort int
 	logStderr bool
 	logFile bool
@@ -24,6 +25,8 @@ parseArgs(parser CommandLineArgsParser) {
 			args.logStderr = true
 		} else if token == "--log-file" {
 			args.logFile = true
+		} else if token == "--crash-dump-path" {
+			args.crashDumpPath = parsePathFlag(parser)
 		} else {
 			parser.error(format("Invalid flag: {}", token))
 		}

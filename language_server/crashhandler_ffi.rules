@@ -1,0 +1,16 @@
+MiniDumpWriteDump
+CreateFileA fun prefer_cstring
+GENERIC_READ const uint
+GENERIC_WRITE const uint
+CREATE_ALWAYS const uint
+FILE_SHARE_* const uint
+FILE_ATTRIBUTE_NORMAL const uint
+CloseHandle
+GetCurrentProcess
+GetCurrentProcessId
+AddVectoredExceptionHandler
+GetCurrentThreadId
+EXCEPTION_CONTINUE_SEARCH
+GetLastError
+MINIDUMP_EXCEPTION_INFORMATION skip
+EXCEPTION_POINTERS struct

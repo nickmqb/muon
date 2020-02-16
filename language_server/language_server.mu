@@ -20,6 +20,7 @@ Stdin {
 :logSocket TcpSocket #Mutable
 :logFile pointer #Mutable
 :logStderr bool #Mutable
+:crashDumpPath string #Mutable
 :newLine Maybe<string> #Mutable
 
 debugMessage(s string) {
@@ -551,6 +552,7 @@ main() {
     ::currentAllocator = tempAlloc.iAllocator_escaping()
 
     ::abandonFn = abandonHandler
+    enableCrashHandler()
 
     Tag.static_init()
 
@@ -585,6 +587,7 @@ main() {
         assert(::logFile != null)
     }
     ::logStderr = args.logStderr
+    ::crashDumpPath = args.crashDumpPath
 
     debugMessage("============== Starting server ==============\n")
     
@@ -600,7 +603,13 @@ main() {
     while true {
         prev := tempAlloc.pushState()
 
-        line := Stdin.tryReadLine().unwrap()
+        maybeLine := Stdin.tryReadLine()
+        if maybeLine.error != 0 {
+            assert(maybeLine.error == Stdin.tryReadLine_eof)
+            break
+        }
+		
+        line := maybeLine.unwrap()
         if !newLine.hasValue {
             newLine = Maybe.from(line[line.length - 1] == '\r' ? "\r\n" : "\n") // Static string, no allocations
         }
@@ -650,7 +659,9 @@ main() {
 
         tempAlloc.restoreState(prev)
     }
-
+    
+    debugMessage("Shutting down\n")
+	
     if ::logSocket != null {
         ::logSocket.close()
     }
