@@ -25,6 +25,9 @@ long {
 ulong {
 }
 
+s128 { // Note: not well supported yet, currently only usable for struct padding
+}
+
 ssize {
 }
 

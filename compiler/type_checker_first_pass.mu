@@ -92,6 +92,7 @@ CommonTags struct #RefType {
 	uint_ Tag
 	long_ Tag
 	ulong_ Tag
+	s128_ Tag
 	ssize_ Tag
 	usize_ Tag
 	float_ Tag
@@ -717,6 +718,7 @@ TypeCheckerFirstPass {
 		tags.uint_ = getCoreTypeTag(c, "uint")
 		tags.long_ = getCoreTypeTag(c, "long")
 		tags.ulong_ = getCoreTypeTag(c, "ulong")
+		tags.s128_ = getCoreTypeTag(c, "s128")
 		tags.ssize_ = getCoreTypeTag(c, "ssize")
 		tags.usize_ = getCoreTypeTag(c, "usize")
 		tags.float_ = getCoreTypeTag(c, "float")
@@ -860,6 +862,9 @@ TypeCheckerFirstPass {
 		tags.ulong_.ti.flags = TypeFlags.intval | TypeFlags.unsigned
 		tags.ulong_.ti.rank = 8
 		
+		tags.s128_.ti.flags = TypeFlags.intval
+		tags.s128_.ti.rank = 16
+
 		tags.ssize_.ti.flags = TypeFlags.intval
 		tags.ssize_.ti.rank = 6
 		

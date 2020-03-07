@@ -86,6 +86,11 @@ CGenerator {
 			c.out.writeLine("typedef int32_t ssize__;")
 			c.out.writeLine("typedef uint32_t usize__;")
 		}
+		c.out.writeLine("#ifdef _MSC_VER")
+		c.out.writeLine("typedef struct __declspec(align(16)) tag_____s128__ { uint64_t lo; int64_t hi; } s128__;")
+		c.out.writeLine("#else")
+		c.out.writeLine("typedef __int128 s128__;")
+		c.out.writeLine("#endif")
 		c.out.writeLine("typedef float float__;")
 		c.out.writeLine("typedef double double__;")
 		c.out.writeLine("typedef uint8_t bool__;")
