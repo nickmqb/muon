@@ -83,7 +83,7 @@ Sym struct #RefType {
 }
 
 AppState struct #RefType {
-	clangTranslationUnit CXTranslationUnit
+	clangTranslationUnit pointer
 	isPlatformAgnostic bool
 	rules List<Rule>
 	ruleLookup List<RuleLookupNode>
