@@ -1,13 +1,14 @@
 Rule struct #RefType {
 	pattern string
-	type RuleType
+	symbolKind SymbolKind
 	constType ConstType
 	useCast bool
 	prefer_cstring bool
+	skip bool
 	isMatched bool
 }
 
-RuleType enum {
+SymbolKind enum {
 	none
 	any
 	function
@@ -15,7 +16,6 @@ RuleType enum {
 	const
 	var
 	enum_
-	skip
 }
 
 ConstType enum {
@@ -98,23 +98,21 @@ makeError(s RuleParseState, text string) {
 	return RuleParseError { text: text, line: s.line }
 }
 
-getRuleType(s string) {
+getSymbolKind(s string) {
 	if s == "any" {
-		return RuleType.any
+		return SymbolKind.any
 	} else if s == "fun" {
-		return RuleType.function
+		return SymbolKind.function
 	} else if s == "struct" {
-		return RuleType.struct_
+		return SymbolKind.struct_
 	} else if s == "enum" {
-		return RuleType.enum_
+		return SymbolKind.enum_
 	} else if s == "const" {
-		return RuleType.const
+		return SymbolKind.const
 	} else if s == "var" {
-		return RuleType.var
-	} else if s == "skip" {
-		return RuleType.skip
+		return SymbolKind.var
 	}
-	return RuleType.none
+	return SymbolKind.none
 }
 
 getConstType(s string) {
@@ -144,60 +142,78 @@ getConstType(s string) {
 	return ConstType.none
 }
 
-parseRule(s RuleParseState) {	
-	first := s.token
+parseRule(s RuleParseState) {
 	rule := new Rule{}
+	done := false
+	first := s.token
+
 	if first == "struct" || first == "union" || first == "enum" {
 		readToken(s)
 		if !s.isLineBreak {
 			rule.pattern = format("{} {}", first, s.token)
-			rule.type = (first == "struct" || first == "union") ? RuleType.struct_ : RuleType.enum_
+			rule.symbolKind = first != "enum" ? SymbolKind.struct_ : SymbolKind.enum_
 			readToken(s)
-			if !s.isLineBreak {
-				if s.token == "skip" {
-					rule.type = RuleType.skip
-					readToken(s)
-				} else if rule.type == RuleType.struct_ && s.token == "prefer_cstring" {
-					rule.prefer_cstring = true
-					readToken(s)
-				}
-			}
 		} else {
 			s.errors.add(makeError(s, "Expected: identifier"))
+			done = true
 		}
 	} else {
 		rule.pattern = first
 		readToken(s)
-		if !s.isLineBreak {
-			rule.type = getRuleType(s.token)
-			if rule.type == RuleType.none {
-				s.errors.add(makeError(s, format("Invalid rule type: {}", s.token)))
-			}
-			readToken(s)
-			if (rule.type == RuleType.function || rule.type == RuleType.struct_) && !s.isLineBreak && s.token == "prefer_cstring" {
-				rule.prefer_cstring = true
+	}
+
+	if !done && s.isLineBreak {
+		if rule.symbolKind == SymbolKind.none {
+			rule.symbolKind = SymbolKind.any
+		}
+		done = true
+	}
+
+	if !done && !s.isLineBreak {
+		symbolKind := getSymbolKind(s.token)
+		if rule.symbolKind == SymbolKind.none {
+			if symbolKind != SymbolKind.none {
+				rule.symbolKind = symbolKind
 				readToken(s)
-			} else if rule.type == RuleType.const {
-				if !s.isLineBreak {
-					if s.token == "cast" {
-						rule.useCast = true
-						readToken(s)
-					}
-				}
-				if !s.isLineBreak {
-					type := getConstType(s.token)
-					if type != ConstType.none {
-						rule.constType = type
-					} else {
-						s.errors.add(makeError(s, format("Invalid constant type: {}", s.token)))
-					}
+			} else {
+				rule.symbolKind = SymbolKind.any
+			}
+		} else {
+			if symbolKind != SymbolKind.none && symbolKind != rule.symbolKind {
+				s.errors.add(makeError(s, format("Inconsistent symbol kind: {}", s.token)))
+				readToken(s)
+			}
+		}
+
+		if (rule.symbolKind == SymbolKind.function || rule.symbolKind == SymbolKind.struct_) && !s.isLineBreak && s.token == "prefer_cstring" {
+			rule.prefer_cstring = true
+			readToken(s)
+		} else if rule.symbolKind == SymbolKind.const {
+			if !s.isLineBreak {
+				if s.token == "cast" {
+					rule.useCast = true
 					readToken(s)
 				}
 			}
-		} else {
-			rule.type = RuleType.any
+			if !s.isLineBreak {
+				type := getConstType(s.token)
+				if type != ConstType.none {
+					rule.constType = type
+				} else {
+					s.errors.add(makeError(s, format("Invalid constant type: {}", s.token)))
+				}
+				readToken(s)
+			}
 		}
+		
+		if !s.isLineBreak {
+			if s.token == "skip" {
+				rule.skip = true
+				readToken(s)
+			}
+		}		
 	}
+
 	while !s.isLineBreak {
 		if s.token == "" {
 			break
@@ -205,6 +221,7 @@ parseRule(s RuleParseState) {
 		s.errors.add(makeError(s, format("Unexpected token: {}", s.token)))
 		readToken(s)
 	}
+
 	return rule
 }
 
@@ -222,13 +239,13 @@ findNextNode(ch char, index int, nodes List<RuleLookupNode>) {
 	}
 }
 
-matchRuleType(k int, type RuleType, nodes List<RuleLookupNode>) Rule {
+matchRuleByKind(k int, kind SymbolKind, nodes List<RuleLookupNode>) Rule {
 	while k != 0 {		
 		rule := nodes[k].rule
 		if rule == null {
 			break
 		}
-		if rule.type == RuleType.any || rule.type == RuleType.skip || rule.type == type {
+		if rule.symbolKind == SymbolKind.any || rule.symbolKind == kind {
 			return rule
 		}
 		k = nodes[k].alt
@@ -236,16 +253,16 @@ matchRuleType(k int, type RuleType, nodes List<RuleLookupNode>) Rule {
 	return null
 }
 
-findRule(s string, k int, type RuleType, nodes List<RuleLookupNode>) Rule {
+findRule(s string, k int, kind SymbolKind, nodes List<RuleLookupNode>) Rule {
 	if s.length == 0 {
 		if nodes[k].rule != null {
-			rule := matchRuleType(k, type, nodes)
+			rule := matchRuleByKind(k, kind, nodes)
 			if rule != null {
 				return rule
 			}
 		}
 		if nodes[k].star != 0 {
-			return matchRuleType(nodes[k].star, type, nodes)
+			return matchRuleByKind(nodes[k].star, kind, nodes)
 		}
 		return null
 	}
@@ -253,7 +270,7 @@ findRule(s string, k int, type RuleType, nodes List<RuleLookupNode>) Rule {
 	s = s.slice(1, s.length)
 	next := findNextNode(ch, k, nodes)
 	if next != 0 {
-		rule := findRule(s, next, type, nodes)
+		rule := findRule(s, next, kind, nodes)
 		if rule != null {
 			return rule
 		}
@@ -261,7 +278,7 @@ findRule(s string, k int, type RuleType, nodes List<RuleLookupNode>) Rule {
 	next = nodes[k].star
 	if next != 0 {
 		for j := 0; j <= s.length {
-			rule := findRule(s.slice(j, s.length), next, type, nodes)
+			rule := findRule(s.slice(j, s.length), next, kind, nodes)
 			if rule != null {
 				return rule
 			}
@@ -351,7 +368,7 @@ parseRules(s string, errors List<RuleParseError>) {
 	while st.token != "" {
 		ruleLine := st.line
 		rule := parseRule(st)
-		if rule.type == RuleType.none {
+		if rule.pattern == "" {
 			continue
 		}
 		rules.add(rule)
@@ -366,6 +383,6 @@ parseRules(s string, errors List<RuleParseError>) {
 defaultRuleLookup() {
 	result := new List<RuleLookupNode>{}
 	result.add(RuleLookupNode { star: 1 })
-	result.add(RuleLookupNode { ch: '*', rule: new Rule { pattern: "*", type: RuleType.any } })
+	result.add(RuleLookupNode { ch: '*', rule: new Rule { pattern: "*", symbolKind: SymbolKind.any } })
 	return result
 }

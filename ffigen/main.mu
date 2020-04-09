@@ -12,8 +12,12 @@ convertLocation(loc CXSourceLocation) {
 	col := 0_u
 	offset := 0_u
 	clang_getFileLocation(loc, ref file, ref line, ref col, ref offset)
-	filename := convertString(clang_getFileName(file))
-	return SourceLocation { filename: filename, line: checked_cast(line, int) }
+	if file != null {
+		filename := convertString(clang_getFileName(file))
+		return SourceLocation { filename: filename, line: checked_cast(line, int) }
+	} else {
+		return SourceLocation{}
+	}
 }
 
 getSizeOfTypeInBytes(type CXType) {
@@ -29,6 +33,12 @@ tryGetSizeOfTypeInBytes(type CXType) {
 
 getOffsetOfFieldInBits(cursor CXCursor) {
 	offset := clang_Cursor_getOffsetOfField(cursor)
+	assert(offset >= 0)
+	return checked_cast(offset, int)
+}
+
+getAlignOfTypeInBytes(type CXType) {
+	offset := clang_Type_getAlignOf(type)
 	assert(offset >= 0)
 	return checked_cast(offset, int)
 }
@@ -53,24 +63,38 @@ getCursorLocationString(cursor CXCursor) {
 //}
 
 
+CXType {
+	hash(t CXType) {
+		return xor(xor(cast(t.kind, uint), transmute(t.data_0, uint)), transmute(t.data_1, uint))
+	}
 
+	equals(a CXType, b CXType) {
+		return a.kind == b.kind && a.data_0 == b.data_0 && a.data_1 == b.data_1
+	}
+}
+
+
+Sym struct #RefType {
+	muName string
+	isDone bool
+	isZeroSizeStruct bool
+	isFunction bool
+	aliases List<string>
+}
 
 AppState struct #RefType {
 	clangTranslationUnit CXTranslationUnit
 	isPlatformAgnostic bool
 	rules List<Rule>
 	ruleLookup List<RuleLookupNode>
-	rename Map<string, string>
-	renamePtr Map<string, string>
-	origName Map<string, string>
-	duplicates Set<string>
+	symbols Map<string, Sym>
+	anonymousStructs Map<CXType, string>
 	macroDefinitions List<string>
 	generateErrors List<string>
-	output StringBuilder
+	output StringBuilder	
+	platform string
+	targetBits string
 }
-
-
-
 
 
 
@@ -88,40 +112,68 @@ unwrapPointerType(type CXType) {
 	return UnwrapPointerTypeResult { type: type, numPtr: num }
 }
 
-bestTypenameDiscoveryPass(cursor CXCursor, parent CXCursor, state AppState) int {
+getSym(name string, symbols Map<string, Sym>) {
+	sym := symbols.getOrDefault(name)
+	if sym == null {
+		sym = new Sym {}
+		symbols.add(name, sym)
+	}
+	return sym
+}
+
+discoveryPass(cursor CXCursor, parent CXCursor, state AppState) int {
 	kind := clang_getCursorKind(cursor)
-	if kind == CXCursorKind.CXCursor_TypedefDecl {
+	if kind == CXCursorKind.CXCursor_UnexposedDecl {
+		// This could be an "extern "C"" declaration
+		return CXChildVisit_Recurse
+	
+	} else if kind == CXCursorKind.CXCursor_TypedefDecl {
 		type := clang_getCursorType(cursor)
-		typedefName := convertString(clang_getTypeSpelling(type))
-		canonicalTypeInfo := unwrapPointerType(clang_getCanonicalType(type))
-		canonicalTypeName := convertString(clang_getTypeSpelling(canonicalTypeInfo.type))
-		if canonicalTypeName != typedefName {
-			if canonicalTypeName.startsWith("struct ") || canonicalTypeName.startsWith("union ") || canonicalTypeName.startsWith("enum ") {
-				if canonicalTypeInfo.numPtr == 0 {
-					state.rename.addOrUpdate(canonicalTypeName, typedefName)
-				} else if canonicalTypeInfo.numPtr == 1 {
-					state.renamePtr.addOrUpdate(canonicalTypeName, typedefName)
-				}
-			} else {
-				if canonicalTypeInfo.numPtr == 0 {
-					state.rename.addOrUpdate(canonicalTypeName, typedefName)
-				}
-			}
+		canonical := unwrapPointerType(clang_getCanonicalType(type))
+		if canonical.numPtr != 0 {
+			return CXChildVisit_Continue
 		}
+
+		name := convertString(clang_getCursorSpelling(cursor))
+		canonicalName := convertString(clang_getTypeSpelling(canonical.type))
+		sym := getSym(canonicalName, state.symbols)
+		sym.muName = name
+		if sym.aliases == null {
+			sym.aliases = new List<string>{}
+		}
+		sym.aliases.add(name)
+
 	} else if kind == CXCursorKind.CXCursor_MacroDefinition {
-		if clang_Cursor_isMacroFunctionLike(cursor) == 0 {
-			name := convertString(clang_getCursorSpelling(cursor))
-			rule := findRule(name, 0, RuleType.const, state.ruleLookup)
-			if rule != null {
-				if (rule.type == RuleType.const || rule.type == RuleType.any) && rule.pattern != "*" {
-					state.macroDefinitions.add(name)
-				} else if rule.type == RuleType.skip {
-					rule.isMatched = true
-				}
-			}
+		if clang_Cursor_isMacroFunctionLike(cursor) != 0 {
+			return CXChildVisit_Continue
+		}
+
+		name := convertString(clang_getCursorSpelling(cursor))
+		rule := findRule(name, 0, SymbolKind.const, state.ruleLookup)
+		if rule == null {
+			return CXChildVisit_Continue
+		}
+
+		if !rule.skip && rule.pattern != "*" {
+			state.macroDefinitions.add(name)
+		} else if rule.skip {
+			rule.isMatched = true
+		}
+
+	} else if kind == CXCursorKind.CXCursor_VarDecl {
+		name := convertString(clang_getCursorSpelling(cursor))
+		if name == "muon_ffigen_constant_platform" {
+			evalResult := clang_Cursor_Evaluate(cursor)			
+			assert(clang_EvalResult_getKind(evalResult) == CXEvalResultKind.CXEval_StrLiteral)
+			state.platform = string.from_cstring(clang_EvalResult_getAsStr(evalResult))
+		} else if name == "muon_ffigen_constant_target_bits" {
+			evalResult := clang_Cursor_Evaluate(cursor)			
+			assert(clang_EvalResult_getKind(evalResult) == CXEvalResultKind.CXEval_StrLiteral)
+			state.targetBits = string.from_cstring(clang_EvalResult_getAsStr(evalResult))
 		}
 	}	
-	return CXChildVisit_Recurse
+	
+	return CXChildVisit_Continue
 }
 
 :generatedConstPrefix = "muon_ffigen_"
@@ -188,11 +240,39 @@ constTypeToString(value ConstType) {
 	}
 }
 
+getDiscoverySourceText(sourceText string) {
+	rb := StringBuilder{}
+
+	rb.write(sourceText)
+	rb.write("\n")
+
+	rb.write("#ifdef _WIN32\n")
+	rb.write("const char *muon_ffigen_constant_platform = \"Windows\";\n")
+	rb.write("#elif __linux__\n")
+	rb.write("const char *muon_ffigen_constant_platform = \"Linux\";\n")
+	rb.write("#elif __APPLE__\n")
+	rb.write("const char *muon_ffigen_constant_platform = \"MacOS\";\n")
+	rb.write("#else\n")
+	rb.write("const char *muon_ffigen_constant_platform = \"\";\n")
+	rb.write("#endif\n")
+
+	rb.write("#if defined(__i386__) || (defined(__arm__) && !defined(__aarch64__))\n")
+	rb.write("const char *muon_ffigen_constant_target_bits = \"32-bit\";\n")
+	rb.write("#elif defined(__amd64__) || defined(__aarch64__)\n")
+	rb.write("const char *muon_ffigen_constant_target_bits = \"64-bit\";\n")
+	rb.write("#else\n")
+	rb.write("const char *muon_ffigen_constant_target_bits = \"\";\n")
+	rb.write("#endif\n")
+
+	return rb.compactToString()
+}
+
 getFinalSourceText(sourceText string, state AppState) {
 	rb := StringBuilder{}
 	rb.write(sourceText)
+	rb.write("\n")
 	for name in state.macroDefinitions {
-		rule := findRule(name, 0, RuleType.const, state.ruleLookup)
+		rule := findRule(name, 0, SymbolKind.const, state.ruleLookup)
 		assert(rule != null)
 		ctype := constTypeToCType(getDefaultConstType(rule.constType))
 		if rule.useCast {
@@ -207,161 +287,246 @@ getFinalSourceText(sourceText string, state AppState) {
 MapStructContext struct {
 	rb StringBuilder
 	state AppState
-	hasFields bool
-	prefix string
-	sizeInBytes int
-	lastOffset int
-	lastSizeInBytes int
-	isDone bool
+	alignInBytes int
+	structName string
 	mapTypeFlags MapTypeFlags
+	anonymousFieldID int
+	nestedID int
+	isUnion bool
+	hasBitFields bool
+	lastOffset int
 }
 
-mapField(name string, type CXType, ctx *MapStructContext) {
-	if ctx.isDone {
-		if type.kind == CXTypeKind.CXType_ConstantArray {
-			elementType := clang_getArrayElementType(type)
-			if clang_Cursor_isAnonymous(clang_getTypeDeclaration(elementType)) == 0 {
-				mapType(elementType, ctx.mapTypeFlags, ctx.state)
-			}
-		} else {
-			mapType(type, ctx.mapTypeFlags, ctx.state)
-		}
+getTypeForSize(size int) {
+	if size == 1 {
+		return "byte"
+	} else if size == 2 {
+		return "ushort"
+	} else if size == 4 {
+		return "uint"
+	} else if size == 8 {
+		return "ulong"
+	} else if size == 16 {
+		return "s128"
+	}
+	return format("FFIGEN_INVALID_PADDING_ELEMENT_{}", size)
+}
+
+mapStructFieldWithName(name string, type CXType, ctx *MapStructContext) {
+	rb := ctx.rb
+
+	if name == "" {
+		name = format("ffigen_anonymous_field{}", ctx.anonymousFieldID)
+		ctx.anonymousFieldID += 1
+	}
+
+	maybeSizeInBytes := tryGetSizeOfTypeInBytes(type)
+	if !maybeSizeInBytes.hasValue {
+		rb.write("\t")
+		rb.write(name)
+		rb.write(" FFIGEN_INVALID_FIELD_SIZE\n")
 		return
 	}
 
-	rb := ctx.rb
-	if type.kind == CXTypeKind.CXType_ConstantArray {
+	size := maybeSizeInBytes.unwrap()
+	align := getAlignOfTypeInBytes(type)
+	if type.kind == CXTypeKind.CXType_LongDouble || align > ctx.alignInBytes {		
+		writeStructPadding(name, size, min(align, ctx.alignInBytes), ctx.rb)
+
+	} else if type.kind == CXTypeKind.CXType_ConstantArray {
 		elementType := clang_getArrayElementType(type)
 		numElements := clang_getNumElements(type)
 		for i := 0_L; i < numElements {
-			rb.write("\t")
-			rb.write(ctx.prefix)
-			rb.write(name)
-			rb.write("_")
-			long.writeTo(i, rb)
-			rb.write(" ")
-			rb.write(mapType(elementType, ctx.mapTypeFlags, ctx.state).type)
-			rb.write("\n")
+			mapStructFieldWithName(format("{}_{}", name, i), elementType, ctx)
 		}
+
+	} else if clang_Cursor_isAnonymous(clang_getTypeDeclaration(type)) != 0 {
+		typename := ctx.state.anonymousStructs.getOrDefault(type)
+		if typename == "" {
+			typename = format("{}_Anonymous{}", ctx.structName, ctx.nestedID)
+			ctx.nestedID += 1
+			genStruct(typename, type, ctx.mapTypeFlags, ctx.state)
+			ctx.state.anonymousStructs.add(type, typename)
+		}
+
+		rb.write("\t")
+		rb.write(name)
+		rb.write(" ")
+		rb.write(typename)
+		rb.write("\n")
+		
 	} else {
 		rb.write("\t")
-		rb.write(ctx.prefix)
-		if name != "" {
-			rb.write(name)
-		} else {
-			rb.write("ffigen_anonymous")
-		}
+		rb.write(name)
 		rb.write(" ")
-		rb.write(mapType(type, ctx.mapTypeFlags, ctx.state).type)
+		rb.write(mapType(type, ctx.mapTypeFlags, true, ctx.state).type)
 		rb.write("\n")
 	}
 }
 
 mapStructField(cursor CXCursor, ctx *MapStructContext) int {
-	rb := ctx.rb
-
-	ctx.hasFields = true
-
-	type := clang_getCursorType(cursor)
 	name := convertString(clang_getCursorSpelling(cursor))
-	maybeSizeInBytes := tryGetSizeOfTypeInBytes(type)
-	offset := getOffsetOfFieldInBits(cursor) / 8
-	isNested := clang_Cursor_isAnonymous(clang_getTypeDeclaration(type)) != 0
-	isArrayNested := type.kind == CXTypeKind.CXType_ConstantArray && clang_Cursor_isAnonymous(clang_getTypeDeclaration(clang_getArrayElementType(type))) != 0
-
-	//rb.write(format("\t//offset of {}: {}\n", name, offsetInBits))
-
-	if !ctx.isDone {
-		if clang_Cursor_isBitField(cursor) != 0 || offset == ctx.lastOffset || !maybeSizeInBytes.hasValue || isArrayNested || type.kind == CXTypeKind.CXType_LongDouble {
-			ctx.isDone = true
-			for i := ctx.lastOffset + ctx.lastSizeInBytes; i < ctx.sizeInBytes {
-				rb.write("\t")
-				rb.write(ctx.prefix)
-				rb.write("ffigen_padding_")
-				i.writeTo(rb)
-				rb.write(" byte\n")
-			}
-		} else {
-			ctx.lastOffset = offset
-			ctx.lastSizeInBytes = maybeSizeInBytes.unwrap()
-		}
-	}
-
-	if isNested {
-		newCtx := MapStructContext { 
-			rb: rb,
-			state: ctx.state,
-			prefix: format("{}{}_", ctx.prefix, name),
-			sizeInBytes: maybeSizeInBytes.unwrap(),
-			lastOffset: -1,
-			lastSizeInBytes: 1,
-			isDone: ctx.isDone,
-			mapTypeFlags: ctx.mapTypeFlags
-		}
-		clang_Type_visitFields(type, pointer_cast(mapStructField, pointer), pointer_cast(ref newCtx, pointer))
-	} else {
-		mapField(name, type, ctx)
-	}
-
+	type := clang_getCursorType(cursor)
+	mapStructFieldWithName(name, type, ctx)
 	return CXChildVisit_Continue
 }
 
-checkStructField(cursor CXCursor, ctx *MapStructContext) int {
-	ctx.hasFields = true
-	return CXChildVisit_Break
+MapUnionContext struct {
+	muName string
+	variantID int
+	state AppState
+	flags MapTypeFlags
 }
 
-MapStructFlags enum #Flags {
-	asRefType
-	none = 0
-}
-
-mapStruct(fromName string, name string, type CXType, flags MapStructFlags, state AppState) {
-	origName := state.origName.getOrDefault(name)
-	if origName != "" {
-		if fromName != origName {
-			state.duplicates.tryAdd(name)
-		}
-		return name
+mapUnionVariant(cursor CXCursor, ctx *MapUnionContext) int {
+	if clang_Cursor_isBitField(cursor) != 0 {
+		return CXChildVisit_Continue
 	}
 
-	state.origName.add(name, fromName)
+	state := ctx.state
 
-	rule := findRule(fromName, 0, RuleType.struct_, state.ruleLookup)
-	if rule != null {
-		rule.isMatched = true
-		if rule.type == RuleType.skip {
-			return name
-		}
-	}
+	muName := format("{}_Variant{}", ctx.muName, ctx.variantID)
+	ctx.variantID += 1
 
 	rb := new StringBuilder{}
-	rb.write(name)
-	rb.write(" ")
-	rb.write("struct ")
-	if (flags & MapStructFlags.asRefType) != 0 {
-		rb.write("#RefType ")
+	rb.write(muName)
+	rb.write(" struct {\n")
+
+	name := convertString(clang_getCursorSpelling(cursor))
+	type := clang_getCursorType(cursor)
+	align := getAlignOfTypeInBytes(type)
+	fieldCtx := MapStructContext { rb: rb, state: state, alignInBytes: align, mapTypeFlags: ctx.flags, structName: muName }
+	mapStructFieldWithName(name, type, ref fieldCtx)
+
+	rb.write("}\n")
+
+	state.output.write(rb.compactToString())
+	return CXChildVisit_Continue
+}
+
+writeStructPadding(name string, size int, elementSize int, rb StringBuilder) {
+	count := size / elementSize
+	if size % elementSize != 0 {
+		rb.write("\t")
+		rb.write(name)
+		rb.write(" FFIGEN_INVALID_FIELD_ALIGNMENT\n")
 	}
-	rb.write("{\n")
+	elementType := getTypeForSize(elementSize)
+	for i := 0; i < count {
+		rb.write("\t")
+		rb.write(name)
+		rb.write("_")
+		i.writeTo(rb)
+		rb.write(" ")
+		rb.write(elementType)
+		rb.write("\n")
+	}
+}
+
+checkStructField(cursor CXCursor, ctx *MapStructContext) int {
+	offset := getOffsetOfFieldInBits(cursor) / 8
+	if offset == ctx.lastOffset {
+		ctx.isUnion = true
+	}
+	if clang_Cursor_isBitField(cursor) != 0 {
+		ctx.hasBitFields = true
+	}
+	ctx.lastOffset = offset
+	return CXChildVisit_Continue
+}
+
+genStruct(muName string, type CXType, flags MapTypeFlags, state AppState) {
+	rb := new StringBuilder{}
+	rb.write(muName)
+	rb.write(" struct {\n")	
 
 	maybeSize := tryGetSizeOfTypeInBytes(type)
-	if maybeSize.hasValue && maybeSize.unwrap() > 0 {
-		ctx := MapStructContext { rb: rb, state: state, sizeInBytes: maybeSize.unwrap(), lastOffset: -1, lastSizeInBytes: 1, mapTypeFlags: (rule != null && rule.prefer_cstring) ? MapTypeFlags.prefer_cstring : MapTypeFlags.none }
-		clang_Type_visitFields(type, pointer_cast(mapStructField, pointer), pointer_cast(ref ctx, pointer))
-	} else {
-		ctx := MapStructContext{}
+	if maybeSize.hasValue {
+		size := maybeSize.unwrap()
+		align := getAlignOfTypeInBytes(type)
+
+		ctx := MapStructContext { lastOffset: -1 }
 		clang_Type_visitFields(type, pointer_cast(checkStructField, pointer), pointer_cast(ref ctx, pointer))
-		if (!ctx.hasFields) {
-			// Generate dummy field to avoid field-less structs, which are not allowed in C
-			rb.write("\tunused int\n")
+		isUnion := ctx.isUnion
+		hasBitFields := ctx.hasBitFields
+		ctx = MapStructContext { rb: rb, state: state, alignInBytes: align, mapTypeFlags: flags, structName: muName }
+
+		if !isUnion && !hasBitFields {
+			clang_Type_visitFields(type, pointer_cast(mapStructField, pointer), pointer_cast(ref ctx, pointer))
 		} else {
-			rb.write("\tFFIGEN_INVALID_STRUCT\n")
+			writeStructPadding("padding", size, align, ctx.rb)
+			if isUnion {
+				uc := MapUnionContext { muName: muName, state: state, flags: flags }
+				clang_Type_visitFields(type, pointer_cast(mapUnionVariant, pointer), pointer_cast(ref uc, pointer))
+			}
+		}
+	} else {
+		rb.write("\tFFIGEN_INVALID_ZERO_SIZED_STRUCT\n")
+	}
+	
+	rb.write("}\n")
+
+	state.output.write(rb.compactToString())
+}
+
+findRuleForAliases(sym Sym, kind SymbolKind, nodes List<RuleLookupNode>) {
+	if sym.aliases == null {
+		return null
+	}
+	for a in sym.aliases {
+		rule := findRule(a, 0, SymbolKind.struct_, nodes)
+		if rule != null {
+			return rule
+		}
+	}
+	return null
+}
+
+mapStruct(type CXType, isUsage bool, state AppState) {
+	assert(type.kind == CXTypeKind.CXType_Record)
+	name := stripConstUnaligned(convertString(clang_getTypeSpelling(clang_getCanonicalType(type))))
+	sym := getSym(name, state.symbols)
+	if sym.isDone {
+		return sym
+	}
+
+	if sym.muName == "" {
+		if name.startsWith("struct ") {
+			sym.muName = name.stripPrefix("struct ")
+		} else if name.startsWith("union ") {
+			sym.muName = name.stripPrefix("union ")
+		} else {
+			sym.muName = name
 		}
 	}
 
-	rb.write("}\n")
-	state.output.write(rb.compactToString())
-	return name
+	maybeSize := tryGetSizeOfTypeInBytes(type)
+	if !maybeSize.hasValue {
+		sym.isZeroSizeStruct = true
+		return sym
+	}
+
+	rule := findRule(name, 0, SymbolKind.struct_, state.ruleLookup)
+	if rule == null {
+		rule = findRuleForAliases(sym, SymbolKind.struct_, state.ruleLookup)
+	}
+
+	if rule == null && !isUsage {
+		return sym
+	}
+
+	sym.isDone = true
+
+	if rule != null {
+		rule.isMatched = true
+		if rule.skip {
+			return sym
+		}
+	}
+
+	genStruct(sym.muName, type, (rule != null && rule.prefer_cstring) ? MapTypeFlags.prefer_cstring : MapTypeFlags.none, state)
+
+	return sym
 }
 
 MapEnumContext struct {
@@ -377,61 +542,76 @@ mapEnumMember(cursor CXCursor, parent CXCursor, ctx *MapEnumContext) int {
 		origValue := clang_getEnumConstantDeclValue(cursor)
 
 		if !ctx.isAnonymous {
-			value := origValue
-			if value < 0 {
-				name = format("{}_ffigen_modified", name)
-				value = cast(transmute(cast(value, int), uint), long)
-			}
-
 			rb := ctx.rb
-			rb.write("\t")
-			rb.write(name)
-			rb.write(" = ")
-			value.writeTo(rb)
-			rb.write("_u\n")
-		}
-
-		rule := findRule(name, 0, RuleType.const, state.ruleLookup)
-		if rule != null {
-			if rule.type == RuleType.const || rule.type == RuleType.any {
-				generateEnumMemberConst(name, origValue, rule, state)
-				rule.isMatched = true
+			value := origValue
+			if value >= int.minValue {
+				if value < 0 {
+					name = format("{}_ffigen_modified", name)
+					value = cast(transmute(cast(value, int), uint), long)
+				}
+				rb.write("\t")
+				rb.write(name)
+				rb.write(" = ")
+				value.writeTo(rb)
+				rb.write("_u\n")
+			} else {
+				rb.write("\tFFIGEN_INVALID_ENUM_VALUE\n")
 			}
 		}
+
+		mapEnumMemberConst(name, origValue, state)
 	}
 	return CXChildVisit_Continue
 }
 
-mapEnum(fromName string, name string, cursor CXCursor, state AppState) {
-	origName := state.origName.getOrDefault(name)
-	if origName != "" {
-		if fromName != origName {
-			state.duplicates.tryAdd(name)
-		}
-		return name
+mapEnum(type CXType, isUsage bool, state AppState) {
+	assert(type.kind == CXTypeKind.CXType_Enum)
+	name := stripConstUnaligned(convertString(clang_getTypeSpelling(clang_getCanonicalType(type))))
+	sym := getSym(name, state.symbols)
+	if sym.isDone {
+		return sym
 	}
 
-	state.origName.add(name, fromName)
+	if sym.muName == "" {
+		if name.startsWith("enum ") {
+			sym.muName = name.stripPrefix("enum ")
+		} else {
+			sym.muName = name
+		}
+	}
 
-	rule := findRule(fromName, 0, RuleType.enum_, state.ruleLookup)
+	rule := findRule(name, 0, SymbolKind.enum_, state.ruleLookup)
+	if rule == null {
+		rule = findRuleForAliases(sym, SymbolKind.enum_, state.ruleLookup)
+	}
+
+	if rule == null && !isUsage {
+		return sym
+	}
+
+	sym.isDone = true
+
 	if rule != null {
 		rule.isMatched = true
-		if rule.type == RuleType.skip {
-			return name
+		if rule.skip {
+			return sym
 		}
 	}
 
+	sym.isDone = true
+
 	rb := new StringBuilder{}
-	rb.write(name)
+	rb.write(sym.muName)
 	rb.write(" ")
 	rb.write("enum #Flags {\n")
 
 	ctx := MapEnumContext { rb: rb, state: state }
+	cursor := clang_getTypeDeclaration(type)
 	clang_visitChildren(cursor, pointer_cast(mapEnumMember, pointer), pointer_cast(ref ctx, pointer))
 
 	rb.write("}\n")
 	state.output.write(rb.compactToString())
-	return name
+	return sym
 }
 
 mapAnonymousEnum(cursor CXCursor, state AppState) {
@@ -503,54 +683,37 @@ mapNonPointerType(type CXType, state AppState) {
 	} else if type.kind == CXTypeKind.CXType_ULongLong {
 		return MappedType { type: "ulong" }
 	}
-	return MappedType { type: format("FFIGEN_UNKNOWN_TYPE_{}", cast(type.kind, uint)), error: true }
+	return MappedType { type: format("FFIGEN_INVALID_TYPE_{}", cast(type.kind, uint)), error: true }
 }
 
-mapType(type_ CXType, flags MapTypeFlags, state AppState) MappedType {
+formatPtr(name string, numPtr int) {
+	return format("{}{}", string.repeatChar('*', numPtr), name)
+}
+
+mapType(type_ CXType, flags MapTypeFlags, isUsage bool, state AppState) MappedType {
 	info := unwrapPointerType(clang_getCanonicalType(type_))
 	if info.type.kind == CXTypeKind.CXType_Void {
 		if info.numPtr > 0 {
-			return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr - 1), "pointer") }
+			return MappedType { type: formatPtr("pointer", info.numPtr - 1) }
 		} else {
 			return MappedType { type: "void" }
 		}
 	} else if info.type.kind == CXTypeKind.CXType_Record {
-		name := stripConstUnaligned(convertString(clang_getTypeSpelling(info.type)))
-		newName := state.rename.getOrDefault(name)
-		if newName != "" {
-			return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr), mapStruct(newName, newName, info.type, MapStructFlags.none, state)), marshal: true }
-		}
-		if info.numPtr > 0 {
-			newPtrName := state.renamePtr.getOrDefault(name)
-			if newPtrName != "" {
-				return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr - 1), mapStruct(newPtrName, newPtrName, info.type, MapStructFlags.asRefType, state)), marshal: true }
+		sym := mapStruct(info.type, isUsage, state)
+		if sym.isZeroSizeStruct {
+			if info.numPtr > 0 {
+				return MappedType { type: formatPtr("pointer", info.numPtr - 1), marshal: true }
+			} else {
+				return MappedType { type: "FFIGEN_INVALID_ZERO_SIZED_STRUCT" }
 			}
 		}
-		cursor := clang_getTypeDeclaration(info.type)
-		if clang_Cursor_isAnonymous(cursor) != 0 {
-			return MappedType { type: format("{}UNKNOWN_TYPE_{}", string.repeatChar('*', info.numPtr), cast(info.type.kind, uint)), error: true }
-		}
-		if name.startsWith("struct ") {
-			return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr), mapStruct(name, name.stripPrefix("struct "), info.type, MapStructFlags.none, state)), marshal: true }
-		}
-		if name.startsWith("union ") {
-			return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr), mapStruct(name, name.stripPrefix("union "), info.type, MapStructFlags.none, state)), marshal: true }
-		}
-		return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr), mapStruct(name, name, info.type, MapStructFlags.none, state)), marshal: true }
+		return MappedType { type: formatPtr(sym.muName, info.numPtr), marshal: true }
 	} else if info.type.kind == CXTypeKind.CXType_Enum {
-		cursor := clang_getTypeDeclaration(info.type)
-		name := stripConstUnaligned(convertString(clang_getTypeSpelling(info.type)))
-		newName := state.rename.getOrDefault(name)
-		if newName != "" {
-			return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr), mapEnum(newName, newName, cursor, state)), marshal: true }
-		}
-		if name.startsWith("enum ") {
-			return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr), mapEnum(name, name.stripPrefix("enum "), cursor, state)), marshal: true }
-		}
-		return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr), mapEnum(name, name, cursor, state)), marshal: true }
+		sym := mapEnum(info.type, isUsage, state)
+		return MappedType { type: formatPtr(sym.muName, info.numPtr), marshal: true }
 	} else if info.type.kind == CXTypeKind.CXType_ConstantArray || info.type.kind == CXTypeKind.CXType_IncompleteArray {
 		elementType := clang_getArrayElementType(info.type)
-		mapped := mapType(elementType, MapTypeFlags.none, state)
+		mapped := mapType(elementType, MapTypeFlags.none, isUsage, state)
 		return MappedType { type: format("{}{}", string.repeatChar('*', info.numPtr + 1), mapped.type), marshal: mapped.marshal }
 	} else if (info.type.kind == CXTypeKind.CXType_FunctionProto || info.type.kind == CXTypeKind.CXType_FunctionNoProto) {
 		return MappedType { type: format("{}{}", string.repeatChar('*', max(0, info.numPtr - 1)), "pointer"), marshal: true }
@@ -562,16 +725,25 @@ mapType(type_ CXType, flags MapTypeFlags, state AppState) MappedType {
 	}
 }
 
-generateFunction(name string, cursor CXCursor, rule Rule, state AppState) {
-	origName := state.origName.getOrDefault(name)
-	if origName != "" {
-		if name != origName {
-			state.duplicates.tryAdd(name)
-		}
-		return
+mapFunction(cursor CXCursor, state AppState) {
+	name := convertString(clang_getCursorSpelling(cursor))
+	sym := getSym(name, state.symbols)
+	if sym.isDone {
+		assert(sym.isFunction)
+		return sym
 	}
+	sym.isFunction = true
+	sym.isDone = true
+	assert(sym.muName == "")
+	sym.muName = name
 
-	state.origName.add(name, name)
+	rule := findRule(name, 0, SymbolKind.function, state.ruleLookup)
+	if rule != null {
+		rule.isMatched = true
+	}
+	if rule == null || rule.skip {
+		return sym
+	}
 
 	rb := StringBuilder{}
 
@@ -596,7 +768,7 @@ generateFunction(name string, cursor CXCursor, rule Rule, state AppState) {
 
 		type := clang_getCursorType(param)
 		typeName := convertString(clang_getTypeSpelling(type))
-		mapped := mapType(type, flags, state)
+		mapped := mapType(type, flags, true, state)
 		if !mapped.error {
 			rb.write(mapped.type)
 			if mapped.marshal {
@@ -614,7 +786,7 @@ generateFunction(name string, cursor CXCursor, rule Rule, state AppState) {
 	rb.write(") ")
 	returnType := clang_getCursorResultType(cursor)
 	returnTypeName := convertString(clang_getTypeSpelling(returnType))	
-	mapped := mapType(returnType, flags, state)
+	mapped := mapType(returnType, flags, true, state)
 	if !mapped.error {
 		rb.write(mapped.type)
 		if mapped.marshal {
@@ -637,13 +809,22 @@ generateFunction(name string, cursor CXCursor, rule Rule, state AppState) {
 	rb.write("\")\n")			
 
 	state.output.write(rb.compactToString())
+	return sym
 }
 
-generateEnumMemberConst(name string, value long, rule Rule, state AppState) {
-	origName := state.origName.getOrDefault(name)
-	if origName != "" && name != origName {
-		state.duplicates.tryAdd(name)
-		return
+mapEnumMemberConst(name string, value long, state AppState) {
+	sym := getSym(name, state.symbols)
+	assert(!sym.isDone)
+	sym.isDone = true
+	assert(sym.muName == "")
+	sym.muName = name
+
+	rule := findRule(name, 0, SymbolKind.const, state.ruleLookup)
+	if rule != null {
+		rule.isMatched = true
+	}
+	if rule == null || rule.skip {
+		return sym
 	}
 
 	rb := state.output
@@ -689,6 +870,7 @@ generateEnumMemberConst(name string, value long, rule Rule, state AppState) {
 	}
 
 	rb.write("\n")
+	return sym
 }
 
 getSuffix(type string) {
@@ -716,16 +898,24 @@ getSuffix(type string) {
 	return ""
 }
 
-generateConst(name string, cursor CXCursor, rule Rule, state AppState) {
-	origName := state.origName.getOrDefault(name)
-	if origName != "" && name != origName {
-		state.duplicates.tryAdd(name)
-		return
+mapConst(name string, cursor CXCursor, state AppState) {
+	sym := getSym(name, state.symbols)
+	assert(!sym.isDone)
+	sym.isDone = true
+	assert(sym.muName == "")
+	sym.muName = name
+
+	rule := findRule(name, 0, SymbolKind.const, state.ruleLookup)
+	if rule != null {
+		rule.isMatched = true
+	}
+	if rule == null || rule.skip {
+		return sym
 	}
 
 	evalResult := clang_Cursor_Evaluate(cursor)			
 	kind := clang_EvalResult_getKind(evalResult)
-	targetType := mapType(clang_getCursorType(cursor), MapTypeFlags.none, state).type
+	targetType := mapType(clang_getCursorType(cursor), MapTypeFlags.none, true, state).type
 
 	rb := state.output
 
@@ -771,13 +961,22 @@ generateConst(name string, cursor CXCursor, rule Rule, state AppState) {
 	}
 
 	rb.write("\n")
+	return sym
 }
 
-generateVar(name string, cursor CXCursor, rule Rule, state AppState) {
-	origName := state.origName.getOrDefault(name)
-	if origName != "" && name != origName {
-		state.duplicates.tryAdd(name)
-		return
+mapVar(name string, cursor CXCursor, state AppState) {
+	sym := getSym(name, state.symbols)
+	assert(!sym.isDone)
+	sym.isDone = true
+	assert(sym.muName == "")
+	sym.muName = name
+
+	rule := findRule(name, 0, SymbolKind.var, state.ruleLookup)
+	if rule != null {
+		rule.isMatched = true
+	}
+	if rule == null || rule.skip {
+		return sym
 	}
 
 	rb := new StringBuilder{}
@@ -788,7 +987,7 @@ generateVar(name string, cursor CXCursor, rule Rule, state AppState) {
 
 	type := clang_getCursorType(cursor)
 	typeName := convertString(clang_getTypeSpelling(type))	
-	mapped := mapType(type, MapTypeFlags.none, state)
+	mapped := mapType(type, MapTypeFlags.none, true, state)
 	if !mapped.error && (!mapped.marshal || mapped.type.startsWith("*")) {
 		rb.write(mapped.type)
 		rb.write(" #Mutable #Foreign(\"")
@@ -801,60 +1000,32 @@ generateVar(name string, cursor CXCursor, rule Rule, state AppState) {
 	}
 
 	state.output.write(rb.compactToString())
+	return sym
 }
 
 generatePass(cursor CXCursor, parent CXCursor, state AppState) int {
 	kind := clang_getCursorKind(cursor)
 	if kind == CXCursorKind.CXCursor_UnexposedDecl {
-		// This could be an "extern "C"" declaration, so always recurse into unexposed decls
+		// This could be an "extern "C"" declaration
 		return CXChildVisit_Recurse
 	
 	} else if kind == CXCursorKind.CXCursor_FunctionDecl {
-		name := convertString(clang_getCursorSpelling(cursor))
-		rule := findRule(name, 0, RuleType.function, state.ruleLookup)
-		if rule != null {
-			if rule.type != RuleType.skip {
-				generateFunction(name, cursor, rule, state)
-			}
-			rule.isMatched = true	
-		}
+		mapFunction(cursor, state)
 	
 	} else if kind == CXCursorKind.CXCursor_TypedefDecl {
-		name := convertString(clang_getCursorSpelling(cursor))
-		info := unwrapPointerType(clang_getCanonicalType(clang_getCursorType(cursor)))
-		rule := findRule(name, 0, info.type.kind == CXTypeKind.CXType_Enum ? RuleType.enum_ : RuleType.struct_, state.ruleLookup)
-		if rule != null {
-			if rule.type != RuleType.skip {
-				type := clang_getCursorType(cursor)
-				mapType(type, MapTypeFlags.none, state)
-			}
-			rule.isMatched = true	
-		}
+		type := clang_getCursorType(cursor)
+		mapType(type, MapTypeFlags.none, false, state)
 	
 	} else if kind == CXCursorKind.CXCursor_StructDecl || kind == CXCursorKind.CXCursor_UnionDecl {
-		name := convertString(clang_getTypeSpelling(clang_getCursorType(cursor)))
-		rule := findRule(name, 0, RuleType.struct_, state.ruleLookup)
-		if rule != null {
-			if rule.type != RuleType.skip {
-				type := clang_getCursorType(cursor)
-				mapType(type, MapTypeFlags.none, state)
-			}
-			rule.isMatched = true	
-		}
+		type := clang_getCursorType(cursor)
+		mapStruct(type, false, state)
 
 	} else if kind == CXCursorKind.CXCursor_EnumDecl {
 		if clang_Cursor_isAnonymous(cursor) != 0 {
 			mapAnonymousEnum(cursor, state)
 		} else {
-			name := convertString(clang_getTypeSpelling(clang_getCursorType(cursor)))
-			rule := findRule(name, 0, RuleType.enum_, state.ruleLookup)		
-			if rule != null {
-				if rule.type != RuleType.skip {
-					type := clang_getCursorType(cursor)
-					mapType(type, MapTypeFlags.none, state)
-				}
-				rule.isMatched = true	
-			}
+			type := clang_getCursorType(cursor)
+			mapEnum(type, false, state)
 		}
 
 	} else if kind == CXCursorKind.CXCursor_VarDecl {
@@ -864,21 +1035,9 @@ generatePass(cursor CXCursor, parent CXCursor, state AppState) int {
 			if name.startsWith(generatedConstPrefix) {
 				name = name.slice(generatedConstPrefix.length, name.length)
 			}
-			rule := findRule(name, 0, RuleType.const, state.ruleLookup)
-			if rule != null {
-				if rule.type != RuleType.skip {
-					generateConst(name, cursor, rule, state)
-				}
-				rule.isMatched = true			
-			}
+			mapConst(name, cursor, state)
 		} else {
-			rule := findRule(name, 0, RuleType.var, state.ruleLookup)
-			if rule != null {
-				if rule.type != RuleType.skip {
-					generateVar(name, cursor, rule, state)
-				}
-				rule.isMatched = true	
-			}
+			mapVar(name, cursor, state)
 		}
 	}
 
@@ -932,7 +1091,7 @@ main() {
 		clangArgs[i] = it.alloc_cstring()
 	}
 
-	unit := parse(index, args.sourcePath, sourceText, clangArgs)
+	unit := parse(index, args.sourcePath, getDiscoverySourceText(sourceText), clangArgs)
 	numDiagnostics := clang_getNumDiagnostics(unit)
 	if numDiagnostics > 0 {
 		Stderr.writeLine(format("clang compilation failed:"))
@@ -946,11 +1105,9 @@ main() {
 	state := new AppState { 
 		clangTranslationUnit: unit, 
 		isPlatformAgnostic: args.isPlatformAgnostic,
-		rename: new Map.create<string, string>(),
-		renamePtr: new Map.create<string, string>(),
-		origName: new Map.create<string, string>(),
+		symbols: new Map.create<string, Sym>(),
+		anonymousStructs: new Map.create<CXType, string>(),
 		macroDefinitions: new List<string>{},
-		duplicates: new Set.create<string>(),
 		generateErrors: new List<string>{},
 	}	
 
@@ -972,11 +1129,13 @@ main() {
 	}
 
 	cursor := clang_getTranslationUnitCursor(unit)
-	clang_visitChildren(cursor, pointer_cast(bestTypenameDiscoveryPass, pointer), pointer_cast(state, pointer))
+	clang_visitChildren(cursor, pointer_cast(discoveryPass, pointer), pointer_cast(state, pointer))
+
 	finalSourceText := getFinalSourceText(sourceText, state)
 	unit = parse(index, args.sourcePath, finalSourceText, clangArgs)
 	numDiagnostics = clang_getNumDiagnostics(unit)
-	generatedConstFirstLine := Util.countLines(sourceText)
+	generatedConstFirstLine := Util.countLines(sourceText) + 1
+
 	if numDiagnostics > 0 {
 		Stderr.writeLine(format("clang temp source file compilation failed:"))
 		for i := 0_u; i < numDiagnostics {
@@ -991,12 +1150,30 @@ main() {
 	}
 
 	state.output = new StringBuilder{}
-	state.output.write("// Generated by ffigen 0.1.0\n")
+	state.output.write("// Generated by ffigen 0.2.0\n")
+	if state.platform != "" {
+		state.output.write(format("// Platform: {}\n", state.platform))
+	}
+	if state.targetBits != "" {
+		state.output.write(format("// Target: {}\n", state.targetBits))
+	}
 	cursor = clang_getTranslationUnitCursor(unit)
 	clang_visitChildren(cursor, pointer_cast(generatePass, pointer), pointer_cast(state, pointer))
 
-	if state.duplicates.count > 0 || state.generateErrors.count > 0 {
-		for it in state.duplicates {
+	usedSymbols := Set.create<string>()
+	duplicates := Set.create<string>()
+	for e in state.symbols {
+		sym := e.value
+		if sym.isDone {
+			assert(sym.muName != "")
+			if !usedSymbols.tryAdd(sym.muName) {
+				duplicates.tryAdd(sym.muName)
+			}
+		}
+	}
+
+	if duplicates.count > 0 || state.generateErrors.count > 0 {
+		for it in duplicates {
 			Stderr.writeLine(format("Duplicate definition: {}", it))
 		}
 		for e in state.generateErrors {
@@ -1015,29 +1192,35 @@ main() {
 			Stdout.writeLine(format("Warning: unmatched rule: {}", ruleToString(r)))
 		}
 	}	
+
+	//Stdout.writeLine(format("{}", state.symbols.count))
 }
 
 ruleToString(r Rule) {
-	if r.type == RuleType.any {
-		return r.pattern
+	rb := StringBuilder{}
+	rb.write(r.pattern)
+	if r.symbolKind != SymbolKind.any {
+		rb.write(" ")
+		rb.write(symbolKindToString(r.symbolKind))
 	}
-	return format("{} {}", r.pattern, ruleTypeToString(r.type))
+	if r.skip {
+		rb.write(" skip")
+	}
+	return rb.compactToString()
 }
 
-ruleTypeToString(t RuleType) {
-	if t == RuleType.function {
+symbolKindToString(k SymbolKind) {
+	if k == SymbolKind.function {
 		return "fun"
-	} else if t == RuleType.struct_ {
+	} else if k == SymbolKind.struct_ {
 		return "struct"
-	} else if t == RuleType.enum_ {
+	} else if k == SymbolKind.enum_ {
 		return "enum"
-	} else if t == RuleType.const {
+	} else if k == SymbolKind.const {
 		return "const"
-	} else if t == RuleType.var {
+	} else if k == SymbolKind.var {
 		return "var"
-	} else if t == RuleType.skip {
-		return "skip"
 	} else {
-		return ""
+		return "?"
 	}
 }
