@@ -28,23 +28,25 @@ If you use ffigen it would be great if you could let me know how it goes by [fil
 
 By default, ffigen maps all symbols in the input file. To exert more control over which symbols are mapped, a rules file can be used. When a rules file is specified, only symbols that match one ore more rules are included in the output. Additionally, a rules file can be used to specify how a symbol is mapped from C to Muon.
 
-A rules file is a text file; each line represents a single rule. The syntax is as follows:
+A rules file is a text file; each line represents a single rule. The syntax of a single rule is as follows:
 
-* `some_name`: Includes the symbol `some_name` in the output, and processes it according to its kind (function, struct, etc.) as detailed below.
-* `some_function fun`: Includes the function named `some_function` in the output. Parameter and return types are also (recursively) processed and included in the output, if needed.
-* `some_struct struct`: Includes the struct or union named `some_struct` in the output. Types of fields are also (recursively) processed and included in the output, if needed.
-* `some_enum enum`: Includes the enum named `some_enum` in the output.
-* `some_const const [some_muon_data_type] [cast]`: Includes the constant variable `some_const` _OR_ the preprocessor symbol `#define some_const ...` in the output. Only basic data types are allowed: integers, floating point numbers and C strings. In the case of a `#define`, `some_muon_data_type` must be used to specify the Muon target type for the symbol. Finally, the term `cast` can be used to force the conversion, if needed.
-* `some_name var`: Includes the global variable or thread local variable `some_name` in the output. Only basic data types are allowed: integers, floating point numbers and C strings.
-* `some_name skip`: Excludes the symbol `some_name` from the output. This is useful if we want to manually define a foreign interface for the symbol, but another rule indirectly causes the symbol to be included in the output. Note that the skip rule will only have an effect if it appears before the other rule that (indirectly) includes the symbol.
-* `struct some_tag_name`, `union some_tag_name`, `enum some_tag_name`: In C, a struct/union/enum may be defined using just a tag name; this rule type allows us to target these. (In case of a clash between an identifier and a tag name, an additional C typedef can be used to work around the issue.)
-* `// some comment`: these lines are ignored, as are lines consisting solely of whitespace.
+`<target_name> [<symbol_kind>] [<args>] [skip]` ([square brackets] denote optional parts)
 
-Rule names may use the wilcard character `*` to match any sequence of zero or more characters. E.g. `libname_*` will match any symbol that starts with `libname_`.
+A rule causes the targeted symbol to be included in the output. Target names may use the wilcard character `*` to match any sequence of zero or more characters. E.g. `libname_*` will match any symbol that starts with `libname_`. To target C tag names (e.g. `union foo { ... };`) prefix the target name with the C keyword (e.g. `union foo`). If the symbol is a function, parameter and return types are recursively included. If the symbol is a struct/union, field types are recursively included.
 
-Normally, a C `char *` is mapped to a Muon `*sbyte`. The keyword `prefer_cstring` may be used with `fun` and `struct` rule types to map a `char *` to a `cstring`, for that rule. If you use this feature, you must make sure that the string is not modified by the C library. This is because Muon allows string literals (which must not be modified) to be assigned to a `cstring`.
+If a symbol kind is specified, the targeted symbol(s) will only be included if they match the specified symbol kind. Possible symbol kinds are: `fun` (functions), `struct` (structs and unions), `enum`, `const` (constants and preprocessor definitions), `var` (global variables).
+
+Additional arguments may/must be specified depending on the symbol kind:
+
+* `fun` / `struct`:  `<target_name> [fun/struct] [prefer_cstring]`. Normally, a C `char *` is mapped to a Muon `*sbyte`. Use `prefer_cstring` to map a `char *` to a `cstring`. If you use this feature, you must make sure that the string is not modified by the C library. This is because Muon allows string literals (which must not be modified) to be assigned to a `cstring`.
+
+* `const`: `<target_name> const [<muon_type>] [cast]`. `muon_type` denotes the Muon type that will be used for the symbol. Only basic data types are allowed: integers, floating point numbers and C strings. In the case of preprocessor definition, the type is required. The term `cast` can be used to force the conversion, if needed.
+
+Finally, the term `skip` may be used to explicitly exclude the symbol from the output. This is useful if we want to manually define a foreign interface for the symbol, but another rule indirectly causes the symbol to be included in the output. Note that a skip rule will only have an effect if it appears before the other rule that (indirectly) includes the symbol.
 
 Naming conflicts should be rare, but most can be resolved by adding a `typedef` to your C file. ffigen will use the name of the last `typedef` it encounters. Alternatively, manually tweak the generated declaration.
+
+Lines starting with `//` and lines consisting solely of whitespace are ignored.
 
 ### Example
 
@@ -55,11 +57,9 @@ For a larger example, have a look at [libclang.rules](libclang.rules), which is 
 ## Future enhancements
 
 * Compile-time sized arrays. Currently, fixed size array declarations are "unrolled".
-* Struct fields that are arrays of anonymous structs. Currently, padding is generated to ensure the correct struct size.
 * Global variables and constants with non-primitive types
 * Type aliases for opaque pointers
 * Function pointers with non standard calling conventions
-* Improve union support. Currently, only the first union variant is mapped. Padding is generated to ensure the correct struct size.
 * Make ffigen available as a library (libffigen) (strongly consider this if we find that rules files are not flexible enough).
 * Generate architecture/platform agnostic definitions (e.g. map a machine word sized integer to a `ssize`/`usize` in Muon).
 * Macros
