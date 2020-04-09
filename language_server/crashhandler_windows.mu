@@ -1,13 +1,5 @@
 :crashAllocator IAllocator #Mutable
 
-// This is a temporary workaround for: https://github.com/nickmqb/muon/issues/31
-MINIDUMP_EXCEPTION_INFORMATION struct {
-	ThreadId uint
-	ExceptionPointers_0 uint
-	ExceptionPointers_1 uint
-	ClientPointers int
-}
-
 UIntPair struct {
 	first uint
 	second uint
