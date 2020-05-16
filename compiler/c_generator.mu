@@ -1219,8 +1219,9 @@ CGenerator {
 			writeTag(sb, tag)
 			sb.write(")")
 		}
+		sb.write("(")
 		genExpression(c, lhs, sb)
-		sb.write(") ")
+		sb.write(")) ")
 		sb.write(op)
 		sb.write(" (")
 		if tag.ti != nodeTag(c, rhs).ti {
@@ -1228,8 +1229,9 @@ CGenerator {
 			writeTag(sb, tag)
 			sb.write(")")
 		}
+		sb.write("(")
 		genExpression(c, rhs, sb)
-		sb.write(")")			
+		sb.write("))")
 	}
 	
 	genShortCircuitOperator(c GenerateContext, op string, e BinaryOperatorExpression, rb StringBuilder) {
