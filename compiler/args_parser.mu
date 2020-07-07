@@ -1,5 +1,5 @@
 CompileArgs struct #RefType {
-	:compilerVersion = "0.3.6"
+	:compilerVersion = "0.3.7"
 	
 	sources List<SourceInfo>
 	includeFile string
