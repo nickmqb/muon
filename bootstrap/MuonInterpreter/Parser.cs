@@ -553,24 +553,16 @@ namespace MuonInterpreter {
         public static int GetBindingLevel(string op) {
             if (op == "." || op == "^") {
                 return 25;
-            } else if (op == "*" || op == "/" || op == "%") {
+            } else if (op == "*" || op == "/" || op == "%" || op == "<<" || op == ">>" || op == "&") {
                 return 20;
-            } else if (op == "+" || op == "-") {
+            } else if (op == "+" || op == "-" || op == "|") {
                 return 19;
-            } else if (op == "<<" || op == ">>") {
+            } else if (op == "==" || op == "!=" || op == "<" || op == ">" || op == "<=" || op == ">=") {
                 return 18;
-            } else if (op == "<" || op == ">" || op == "<=" || op == ">=") {
-                return 17;
-            } else if (op == "==" || op == "!=") {
-                return 16;
-            } else if (op == "&") {
-                return 15;
-            } else if (op == "|") {
-                return 14;
             } else if (op == "&&") {
-                return 13;
+                return 17;
             } else if (op == "||") {
-                return 12;
+                return 16;
             } else if (op == "?") {
                 return 10;
             } else if (op == "=" || (op.Length == 2 && op[1] == '=') || (op.Length == 3 && op[2] == '=')) {
