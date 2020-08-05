@@ -54,7 +54,7 @@ List<T> struct #RefType {
 	
 	reserve(this List<T>, capacity int) {
 		assert(capacity >= 0)
-		if capacity < this.capacity {
+		if capacity <= this.capacity {
 			return
 		}
 		this.dataPtr = ::currentAllocator.realloc(this.dataPtr, CheckedMath.mulPositiveSsize(capacity, sizeof(T)), cast(this.capacity, ssize) * sizeof(T), cast(this.count, ssize) * sizeof(T))
