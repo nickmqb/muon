@@ -30,7 +30,12 @@ Array<T> struct #RefType {
 		Memory.memcpy(dest.dataPtr + cast(index, ssize) * sizeof(T), src.dataPtr + cast(from, ssize) * sizeof(T), cast(cast(count, ssize) * sizeof(T), usize))
 	}
 	
+	// TODO: remove this eventually
 	clear(this Array<T>) {
+		Memory.memset(this.dataPtr, 0, cast(cast(this.count, ssize) * sizeof(T), usize))
+	}
+
+	clearValues(this Array<T>) {
 		Memory.memset(this.dataPtr, 0, cast(cast(this.count, ssize) * sizeof(T), usize))
 	}
 }
