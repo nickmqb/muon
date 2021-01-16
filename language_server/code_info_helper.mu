@@ -23,8 +23,12 @@ CodeInfoHelper {
 
 	getMemberLocation(node Node) {
 		match node {
-			FunctionDef: {					
-				return Location { unit: node.unit, span: node.name.span }
+			FunctionDef: {			
+				if node.builtin == BuiltinFunction.none {
+					return Location { unit: node.unit, span: node.name.span }
+				} else {
+					return Location{}
+				}				
 			}
 			FieldDef: {
 				return Location { unit: node.unit, span: node.name.span }
