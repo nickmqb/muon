@@ -71,6 +71,18 @@ List<T> struct #RefType {
 		return Array<T> { dataPtr: this.dataPtr + cast(from, ssize) * sizeof(T), count: to - from }
 	}
 	
+	insert(this List<T>, item T, index int) {
+		assert(0 <= index && index <= this.count)
+		if this.count == this.capacity {
+			grow(this)
+		}
+		src := this.dataPtr + cast(index, ssize) * sizeof(T)
+		dest := src + sizeof(T)
+		Memory.memmove(dest, src, cast(cast(this.count - index, ssize) * sizeof(T), usize))
+		unchecked_index(this, index) = item
+		this.count += 1
+	}
+
 	removeIndexShift(this List<T>, index int) {
 		assert(0 <= index && index < this.count)
 		dest := this.dataPtr + cast(index, ssize) * sizeof(T)
