@@ -62,6 +62,7 @@ TypeFlags enum #Flags {
 	pointer_
 	struct_
 	refType
+	indexable
 	enum_
 	flagsEnum
 	taggedPointerEnum
@@ -371,10 +372,13 @@ TypeCheckerFirstPass {
 		}
 		if nd.attributes != null {
 			for a in nd.attributes {
+				// TODO: Should only be able to apply these attributes to the NamespaceDef with the struct/enum keyword (which defines the struct/enum)
 				if a.name.value == "RefType" {
 					checkRefTypeAttribute(c, ns, a)
 				} else if a.name.value == "Flags" {
 					checkFlagsAttribute(c, ns, a)
+				} else if a.name.value == "Indexable" {
+					checkIndexableAttribute(c, ns, a)
 				} else {
 					badAttribute(c, a)
 				}
@@ -567,6 +571,23 @@ TypeCheckerFirstPass {
 		}
 		checkAttributeArgCount(c, a, 0)
 		ns.flags |= TypeFlags.flagsEnum
+	}
+	
+	checkIndexableAttribute(c TypeCheckerContext, ns Namespace, a Attribute) {
+		if ns.kind != NamespaceKind.struct_ {
+			c.errors.add(Error.at(c.unit, a.name.span, "Attribute can only be applied to struct type"))
+			return
+		}
+		if ns.typeParamList == null || ns.typeParamList.count != 1 {
+			c.errors.add(Error.at(c.unit, a.name.span, "Attribute can only be applied to struct type with single type parameter"))
+			return
+		}
+		if (ns.flags & TypeFlags.indexable) != 0 {
+			redundantAttribute(c, a)
+			return
+		}
+		checkAttributeArgCount(c, a, 0)
+		ns.flags |= TypeFlags.indexable
 	}
 	
 	checkFunctionForeignAttribute(c TypeCheckerContext, fd FunctionDef, a Attribute) {

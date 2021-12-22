@@ -1571,6 +1571,9 @@ TypeChecker {
 				canAssign = true
 			} else if rt.tag.ti == c.tags.string_.ti {
 				element = c.tags.char_
+			} else if (seq.ti.flags & TypeFlags.indexable) != 0 {
+				element = seq.args[0]
+				canAssign = true
 			} else {
 				c.errors.add(Error.at(c.unit, RangeFinder.find(target), "Expected: expression of type Array, List or string"))
 			}
