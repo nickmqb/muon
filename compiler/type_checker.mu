@@ -691,7 +691,7 @@ TypeChecker {
 		seq := seqWrapped.ti == c.tags.ptrTi ? seqWrapped.args[0] : seqWrapped
 		element := Tag{}
 		if seq.ti != null {
-			if seq.ti == c.tags.arrayTi || seq.ti == c.tags.listTi || seq.ti == c.tags.setTi || seq.ti == c.tags.customSetTi {
+			if seq.ti == c.tags.arrayTi || seq.ti == c.tags.listTi || seq.ti == c.tags.setTi || seq.ti == c.tags.customSetTi || ((seq.ti.flags & TypeFlags.indexable) != 0 && seq.args != null && seq.args.count > 0) {
 				element = seq.args[0]
 			} else if seq.ti == c.tags.setTi || seq.ti == c.tags.customSetTi {
 				if c.tags.setEntryTi != null {
@@ -706,7 +706,7 @@ TypeChecker {
 					c.errors.add(Error.at(c.unit, RangeFinder.find(st.keyword), "Missing declaration of type MapEntry; cannot iterate over map"))
 				}
 			} else {
-				c.errors.add(Error.at(c.unit, RangeFinder.find(st.sequenceExpr), format("Expected: expression of type Array, List, Set or Map, but got: {}", seq.toString())))
+				c.errors.add(Error.at(c.unit, RangeFinder.find(st.sequenceExpr), format("Expected: expression of type Array, List, Set, Map or some #Indexable, but got: {}", seq.toString())))
 			}
 		}
 		prev := c.localsList.count
@@ -1216,6 +1216,9 @@ TypeChecker {
 				badUnaryOp(c, e.op, at)
 				return Tag{}
 			}
+			if (at.ti.flags & TypeFlags.intval) != 0 {
+				at = promoteUnaryOperatorIntvalArgument(c.tags, at)
+			}
 			recordTag(c, e, at)
 			return at
 		} else if op == "!" {
@@ -1229,6 +1232,9 @@ TypeChecker {
 			if (at.ti.flags & (TypeFlags.intval | TypeFlags.flagsEnum)) == 0 {
 				badUnaryOp(c, e.op, at)
 				return Tag{}
+			}
+			if (at.ti.flags & TypeFlags.intval) != 0 {
+				at = promoteUnaryOperatorIntvalArgument(c.tags, at)
 			}
 			recordTag(c, e, at)
 			return at

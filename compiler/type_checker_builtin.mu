@@ -141,17 +141,21 @@ TypeChecker {
 		}
 		if (dest.ti.flags & TypeFlags.typeParam) != 0 {
 			tpi := findTypeParamIndex(tps, dest.ti)
-			assert(tpi >= 0)
-			if ta[tpi].ti != null {
-				if ta[tpi].ti == Tag.null_.ti && (tag.ti.flags & TypeFlags.anyPointer) != 0 {
+			if tpi >= 0 {
+				// Type param from callee context: match
+				if ta[tpi].ti != null {
+					if ta[tpi].ti == Tag.null_.ti && (tag.ti.flags & TypeFlags.anyPointer) != 0 {
+						ta[tpi] = tag
+						return true
+					}
+					dest = ta[tpi]
+				} else {
 					ta[tpi] = tag
 					return true
-				}
-				dest = ta[tpi]
+				}			
 			} else {
-				ta[tpi] = tag				
-				return true
-			}			
+				// OK: type param from calling context
+			}
 		}
 		if tag.ti == dest.ti {
 			if tag.args != null || dest.args != null {
@@ -210,6 +214,11 @@ TypeChecker {
 			}
 			if (tag.ti.flags & TypeFlags.unsigned) == 0 && dest.ti.rank > tag.ti.rank {
 				return true
+			}
+			if (tag.ti.flags & TypeFlags.unsigned) != 0 {
+				if (dest.ti.rank == 6 ? 4 : dest.ti.rank) > (tag.ti.rank == 6 ? 8 : tag.ti.rank) {
+					return true
+				}
 			}
 			if e.is(NumberExpression) && tag.ti == c.tags.int_.ti {
 				num := e.as(NumberExpression)
@@ -325,6 +334,19 @@ TypeChecker {
 		}
 		return Tag{}
 	}
+
+	promoteUnaryOperatorIntvalArgument(t CommonTags, a Tag) {
+		if (a.ti.flags & TypeFlags.unsigned) != 0 {
+			if a.ti.rank < 4 {
+				return t.uint_
+			}			
+		} else {
+			if a.ti.rank < 4 {
+				return t.int_
+			}
+		}
+		return a
+	}
 	
 	canApplyCompareEqualsOperator(c TypeCheckerContext, a Tag, ax Node, b Tag, bx Node) {
 		if Tag.equals(a, b) {
@@ -356,9 +378,11 @@ TypeChecker {
 	}
 	
 	canApplyCompareOrderedOperator(c TypeCheckerContext, a Tag, ax Node, b Tag, bx Node) {
-		tag := tryUnifyNumbers(c.tags, a, ax, b, bx)
-		if tag.ti != null {
-			return true
+		if (a.ti.flags & TypeFlags.anyNumber) != 0 && (b.ti.flags & TypeFlags.anyNumber) != 0 {
+			tag := tryUnifyNumbers(c.tags, a, ax, b, bx)
+			if tag.ti != null {
+				return true
+			}
 		}
 		if (a.ti.flags & TypeFlags.string_) != 0 && (b.ti.flags & TypeFlags.string_) != 0 {
 			return true

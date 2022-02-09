@@ -630,7 +630,7 @@ CGenerator {
 		dataPtr := ""
 		unwrapValue := false
 		checkHash := false
-		if seqTagNoPtr.ti == c.tags.arrayTi || seqTagNoPtr.ti == c.tags.listTi {
+		if seqTagNoPtr.ti == c.tags.arrayTi || seqTagNoPtr.ti == c.tags.listTi || (seqTagNoPtr.ti.flags & TypeFlags.indexable) != 0 {
 			itTag = seqTagNoPtr.args[0]
 			entryTag = seqTagNoPtr.args[0]
 			count = "count__"
