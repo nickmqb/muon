@@ -1037,7 +1037,10 @@ generatePass(cursor CXCursor, parent CXCursor, state AppState) int {
 			}
 			mapConst(name, cursor, state)
 		} else {
-			mapVar(name, cursor, state)
+			// Don't generate vars for extern decls
+			if clang_getCursorLinkage(cursor) != CXLinkageKind.CXLinkage_External {
+				mapVar(name, cursor, state)
+			}
 		}
 	}
 
@@ -1070,7 +1073,7 @@ readFile(path string, errorMessage string) {
 main() {
 	::abandonFn = abandonHandler
 	::currentAllocator = Memory.newArenaAllocator(256 * 1024 * 1024)
-
+	
 	errors := new List<CommandLineArgsParserError>{}
 	parser := new CommandLineArgsParser.from(Environment.getCommandLineArgs(), errors)
 	args := parseArgs(parser)
@@ -1091,13 +1094,14 @@ main() {
 		clangArgs[i] = it.alloc_cstring()
 	}
 
-	unit := parse(index, args.sourcePath, getDiscoverySourceText(sourceText), clangArgs)
+	unit := parse(index, args.sourcePath, getDiscoverySourceText(sourceText), clangArgs)	
 	numDiagnostics := clang_getNumDiagnostics(unit)
 	if numDiagnostics > 0 {
 		Stderr.writeLine(format("clang compilation failed:"))
 		for i := 0_u; i < numDiagnostics {
 			diag := clang_getDiagnostic(unit, i)
-			Stderr.writeLine(convertString(clang_getDiagnosticSpelling(diag)))
+			loc := convertLocation(clang_getDiagnosticLocation(diag))
+			Stderr.writeLine(format("[{}:{}] {}", loc.filename, loc.line, convertString(clang_getDiagnosticSpelling(diag))))
 		}
 		exit(1)
 	}
