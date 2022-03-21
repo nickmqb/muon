@@ -1530,8 +1530,9 @@ CGenerator {
 			} else {
 				sb.write("(")
 				sb.write(p.marshalType)
-				sb.write(")")
+				sb.write(")(")
 				genForeignArgImpl(c, arg, p, isImplicitArg, sb)
+				sb.write(")")
 			}
 		} else {
 			genForeignArgImpl(c, arg, p, isImplicitArg, sb)
