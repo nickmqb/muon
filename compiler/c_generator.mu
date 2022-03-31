@@ -850,6 +850,7 @@ CGenerator {
 			sb.write(index)
 			sb.write(" += 1;")
 			c.out.writeLine(sb.toString())
+			sb.clear()
 		}
 		
 		c.out.unIndent()
