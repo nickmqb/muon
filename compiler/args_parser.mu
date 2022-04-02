@@ -4,6 +4,7 @@ CompileArgs struct #RefType {
 	sources List<SourceInfo>
 	includeFile string
 	outputFile string
+	footerFile string
 	target32bit bool
 	noEntryPoint bool
 	buildCommand string	
@@ -89,6 +90,8 @@ ArgsParser {
 				parseIncludeFile(s)
 			} else if s.token == "--output-file" {
 				parseOutputFile(s)
+			} else if s.token == "--footer-file" {
+				parseFooterFile(s)
 			} else if s.token == "-m32" {
 				s.args.target32bit = true
 				readToken(s)
@@ -186,6 +189,17 @@ ArgsParser {
 		readToken(s)
 	}
 	
+	parseFooterFile(s ArgsParserState) {
+		readToken(s)
+		if s.token == "" {
+			expected(s, "filename")
+			return
+		} else {
+			s.args.footerFile = s.token
+		}
+		readToken(s)
+	}
+
 	parseBuildCommand(s ArgsParserState) {
 		readToken(s)
 		if s.token == "" {

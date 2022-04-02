@@ -4,6 +4,7 @@
 * `--args [path]`: read additional command line flags from the specified file.
 * `--output-file [path]`: the path of the generated C file. Defaults to `out.c`.
 * `--include-file [path]`: the compiler emits a single `#include` statement at the top of the generated C file. This flag controls which file is #included. Defaults to `external.h`.
+* `--footer-file [path]`: optionally emit a single `#include` statement at the bottom of the generated C file.
 * `-m64`: use 64-bit output target; this is the default.
 * `-m32`: use 32-bit output target.
 * `--build-command [command]`: run the command after successful generation of the C file.

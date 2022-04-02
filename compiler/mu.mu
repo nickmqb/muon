@@ -155,7 +155,7 @@ compile(comp Compilation, args CompileArgs) {
 	if args.target32bit {
 		comp.flags |= CompilationFlags.target32bit
 	}
-	CGenerator.generate(genc, args.includeFile, !args.noEntryPoint, CompileArgs.compilerVersion)
+	CGenerator.generate(genc, args.includeFile, args.footerFile, !args.noEntryPoint, CompileArgs.compilerVersion)
 
 	generateTime := CpuTimeStopwatch.elapsed()
 
