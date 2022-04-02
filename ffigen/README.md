@@ -53,9 +53,9 @@ Lines starting with `//` and lines consisting solely of whitespace are ignored.
 
 ### Example
 
-To try the [example](example.mu), run: `ffigen --source example.h --rules example.rules --output example_ffi.mu`, then build using: `mu --args example.args`, and compile example.c with a C compiler.
+To try the [example](example), from the example directory, run: `../ffigen --source example.h --rules example.rules --output example_ffi.mu`, then build using: `mu --args example.args`, and compile example.c with a C compiler.
 
-For a larger example, have a look at [libclang.rules](libclang.rules), which is used to generate the foreign interface for libclang, which is used by ffigen itself! (example command line (Windows), from bindings directory: `..\ffigen --source ..\external.h --clang-arg -I"c:\Program Files\LLVM\include" --rules libclang.rules --output libclang_test.mu`)
+For a larger example, have a look at [libclang.rules](bindings/libclang.rules), which is used to generate the foreign interface for libclang, which is used by ffigen itself! (example command line (Windows), from the bindings directory: `..\ffigen --source ..\external.h --clang-arg -I"c:\Program Files\LLVM\include" --rules libclang.rules --output libclang_test.mu`)
 
 ## Future enhancements
 

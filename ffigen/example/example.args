@@ -1,4 +1,4 @@
-../lib/core.mu
+../../lib/core.mu
 example_ffi.mu
 example.mu
 --include-file example.h
