@@ -1028,6 +1028,8 @@ CGenerator {
 					sb.write(format("{}u", opaqueValue))
 					if tag.ti.rank == 8 || (tag.ti.rank == 6 && (c.comp.flags & CompilationFlags.target32bit) == 0) {
 						sb.write("LL")
+					} else {
+						assert(opaqueValue <= uint.maxValue)
 					}
 				}
 			} else {
@@ -1039,6 +1041,7 @@ CGenerator {
 						sb.write(format("{}LL - 1", long.minValue + 1))
 					}
 				} else {
+					assert(int.minValue <= value && value <= int.maxValue)
 					if value > int.minValue {
 						sb.write(format("{}", value))
 					} else {
@@ -1047,6 +1050,7 @@ CGenerator {
 				}
 			}	
 		} else if (tag.ti.flags & TypeFlags.enum_) != 0 {
+			assert(opaqueValue <= uint.maxValue)
 			sb.write(format("{}u", opaqueValue))
 		} else {
 			abandon()
