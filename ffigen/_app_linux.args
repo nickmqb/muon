@@ -1,3 +1,4 @@
---args build_shared.args
+--args _app.args
+src/crash_handler_linux.mu
 bindings/libclang_linux_macos.mu
 --include-file external.h

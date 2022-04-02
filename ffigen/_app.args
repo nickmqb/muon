@@ -1,5 +1,6 @@
 ../lib/core.mu
 ../lib/basic.mu
+../lib/float.mu
 ../lib/stdio.mu
 ../lib/string.mu
 ../lib/containers.mu
@@ -8,7 +9,15 @@
 ../lib/range.mu
 ../compiler/command_line_args_parser.mu
 src/util.mu
+src/clang_utils.mu
+src/app_state.mu
+src/rules_parser.mu
 src/rules.mu
+src/discovery_pass.mu
+src/generate_pass.mu
+src/generate_function.mu
+src/generate_struct.mu
+src/generate_enum.mu
 src/args_parser.mu
 src/main.mu
 --output-file ffigen.c

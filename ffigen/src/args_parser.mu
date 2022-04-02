@@ -2,27 +2,26 @@ Args struct {
 	sourcePath string
 	rulesPath string
 	outputPath string
+	validationPath string
 	clangArgs List<string>
 	isPlatformAgnostic bool
+	collisionCheck bool
 }
 
 parseArgs(parser CommandLineArgsParser) {
 	args := Args { clangArgs: new List<string>{} }
 
-	hasSource := false
-	hasOutput := false
-
 	token := parser.readToken()
 	
 	while token != "" {
 		if token == "--source" {
-			hasSource = true
 			args.sourcePath = parseString(parser, "path")
 		} else if token == "--rules" {
 			args.rulesPath = parseString(parser, "path")
 		} else if token == "--output" {
-			hasOutput = true
 			args.outputPath = parseString(parser, "path")
+		} else if token == "--validation" {
+			args.validationPath = parseString(parser, "path")
 		} else if token == "--clang-arg" {
 			arg := parseString(parser, "argument")
 			if arg != "" {
@@ -30,16 +29,21 @@ parseArgs(parser CommandLineArgsParser) {
 			}
 		} else if token == "--platform-agnostic" {
 			args.isPlatformAgnostic = true
+		} else if token == "--collision-check" {
+			args.collisionCheck = true
 		} else {
 			parser.error(format("Invalid flag: {}", token))
 		}
 		token = parser.readToken()
 	}
 
-	if !hasSource {
+	if args.sourcePath == "" {
 		parser.expected("--source [path]")
 	}
-	if !hasOutput {
+	if args.rulesPath == "" {
+		parser.expected("--rules [path]")
+	}
+	if args.outputPath == "" {
 		parser.expected("--output [path]")
 	}
 
