@@ -305,9 +305,8 @@ CGenerator {
 			sb.write(" ")
 			writeStaticField(sb, sf)
 			if er.type == EvalResultType.value {
-				sb.write(" = ")
-				assert((tag.ti.flags & (TypeFlags.intval | TypeFlags.boolval)) != 0)
-				genOpaqueValue(c, tag, er.opaqueValue, sb)
+				sb.write(" = ")				
+				genOpaqueValue(c, er.tag, er.opaqueValue, sb)
 			} else if er.type == EvalResultType.generateVar {
 				sb.write(" = ")
 				genExpression(c, sf.initializeExpr, sb)
@@ -1020,32 +1019,38 @@ CGenerator {
 	genOpaqueValue(c GenerateContext, tag Tag, opaqueValue ulong, sb StringBuilder) {
 		if (tag.ti.flags & TypeFlags.boolval) != 0 {
 			sb.write(format("{}", opaqueValue))
-		} else if (tag.ti.flags & TypeFlags.unsigned) != 0 {
-			if opaqueValue == ulong.maxValue {
-				// Note: this code path is here to cover up the fact that the c# interpreter doesn't like ulongs larger than long.maxValue
-				sb.write("0xffffffffffffffffuLL")
+		} else if (tag.ti.flags & TypeFlags.intval) != 0 {
+			if (tag.ti.flags & TypeFlags.unsigned) != 0 {
+				if opaqueValue == ulong.maxValue {
+					// Note: this code path is here to cover up the fact that the c# interpreter doesn't like ulongs larger than long.maxValue
+					sb.write("0xffffffffffffffffuLL")
+				} else {
+					sb.write(format("{}u", opaqueValue))
+					if tag.ti.rank == 8 || (tag.ti.rank == 6 && (c.comp.flags & CompilationFlags.target32bit) == 0) {
+						sb.write("LL")
+					}
+				}
 			} else {
-				sb.write(format("{}u", opaqueValue))
+				value := transmute(opaqueValue, long)
 				if tag.ti.rank == 8 || (tag.ti.rank == 6 && (c.comp.flags & CompilationFlags.target32bit) == 0) {
-					sb.write("LL")
+					if value > long.minValue {
+						sb.write(format("{}LL", value))
+					} else {
+						sb.write(format("{}LL - 1", long.minValue + 1))
+					}
+				} else {
+					if value > int.minValue {
+						sb.write(format("{}", value))
+					} else {
+						sb.write(format("{} - 1", int.minValue + 1))
+					}
 				}
-			}
+			}	
+		} else if (tag.ti.flags & TypeFlags.enum_) != 0 {
+			sb.write(format("{}u", opaqueValue))
 		} else {
-			value := transmute(opaqueValue, long)
-			if tag.ti.rank == 8 || (tag.ti.rank == 6 && (c.comp.flags & CompilationFlags.target32bit) == 0) {
-				if value > long.minValue {
-					sb.write(format("{}LL", value))
-				} else {
-					sb.write(format("{}LL - 1", long.minValue + 1))
-				}
-			} else {
-				if value > int.minValue {
-					sb.write(format("{}", value))
-				} else {
-					sb.write(format("{} - 1", int.minValue + 1))
-				}
-			}
-		}	
+			abandon()
+		}
 	}
 	
 	genNumberExpression(c GenerateContext, e NumberExpression, sb StringBuilder) {
