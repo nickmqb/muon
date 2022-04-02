@@ -250,18 +250,18 @@ validateStruct(s AppState, muName string, type CXType) {
 	if clang_Cursor_isAnonymous(clang_getTypeDeclaration(type)) != 0 {
 		size := getSizeOfTypeInBytes(type)
 		align := getAlignOfTypeInBytes(type)
-		s.validationOutput.write(format("static_assert(sizeof({}__) == {}, {}); // Anonymous struct\n", muName, size, label))
-		s.validationOutput.write(format("static_assert(alignof({}__) == {}, {}); // Anonymous struct\n", muName, align, label))
+		s.validationOutput.write(format("_Static_assert(sizeof({}__) == {}, {}); // Anonymous struct\n", muName, size, label))
+		s.validationOutput.write(format("_Static_assert(alignof({}__) == {}, {}); // Anonymous struct\n", muName, align, label))
 	} else {
 		cname := convertString(clang_getTypeSpelling(type))
-		s.validationOutput.write(format("static_assert(sizeof({}__) == sizeof({}), {});\n", muName, cname, label))
-		s.validationOutput.write(format("static_assert(alignof({}__) == alignof({}), {});\n", muName, cname, label))
+		s.validationOutput.write(format("_Static_assert(sizeof({}__) == sizeof({}), {});\n", muName, cname, label))
+		s.validationOutput.write(format("_Static_assert(alignof({}__) == alignof({}), {});\n", muName, cname, label))
 	}
 }
 
 validateField(s AppState, muStructName string, muName string, cname string, vc ValidationContext) {
 	sb := new StringBuilder{}
-	sb.write("static_assert(")
+	sb.write("_Static_assert(")
 	for ofs in vc.offsets {
 		sb.write("offsetof(")
 		sb.write(ofs.structName)

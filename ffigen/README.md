@@ -10,10 +10,10 @@ If you use ffigen it would be great if you could let me know how it goes by [fil
 
 ## Getting started
 
-1. Install libclang. Optionally, add the LLVM bin folder to your PATH.
+1. Install LLVM13. Optionally, add the LLVM bin folder to your PATH.
 2. Build using either: `mu --args _app_linux_.args` or `mu --args _app_windows.args`, depending on your platform.
 3. Compile ffigen.c using your favorite C compiler. Make sure that the compiler can find the libclang .h and library (.so or .lib) files.
-	* Example (Ubuntu, gcc): `mu --args _app_linux_.args && gcc -I/usr/lib/llvm-9/include -L/usr/lib/llvm-9/lib -o ffigen ffigen.c -lclang`
+	* Example (Ubuntu, gcc): `mu --args _app_linux_.args && gcc -I/usr/lib/llvm-13/include -L/usr/lib/llvm-13/lib -o ffigen ffigen.c -lclang`
 	* Example (Windows, msvc): `mu --args _app_windows.args && cl /Zi /I"c:\Program Files\LLVM\include" ffigen.c /link /libpath:"c:\Program Files\LLVM\lib" libclang.lib`
 
 ## Command line arguments

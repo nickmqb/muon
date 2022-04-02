@@ -102,8 +102,8 @@ parseCFile(sourcePath string, sourceText string, clangArgs Array<cstring>) {
 	index := clang_createIndex(0, 0)
 	unsavedFiles := new Array<CXUnsavedFile>(1)
 	unsavedFiles[0] = CXUnsavedFile {
-		Filename: sourcePath.alloc_cstring(),
-		Contents: sourceText.alloc_cstring(),
+		Filename: pointer_cast(sourcePath.alloc_cstring(), *sbyte),
+		Contents: pointer_cast(sourceText.alloc_cstring(), *sbyte),
 		Length: checked_cast(sourceText.length, uint)
 	}
 	unit := clang_parseTranslationUnit(index, sourcePath.alloc_cstring(), pointer_cast(clangArgs.dataPtr, *cstring), clangArgs.count, ref unsavedFiles[0], 1, cast(CXTranslationUnit_DetailedPreprocessingRecord, uint))
