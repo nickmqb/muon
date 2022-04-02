@@ -148,7 +148,7 @@ mapType(s AppState, type CXType, flags MapFlags) MappedType {
 	info := unwrapPointerType(clang_getCanonicalType(type))
 	if info.type.kind == CXTypeKind.CXType_Void {
 		if info.numPtr > 0 {
-			return MappedType { type: formatMuonPtr("pointer", info.numPtr - 1), marshal: false }
+			return MappedType { type: formatMuonPtr("pointer", info.numPtr - 1), marshal: true }
 		} else {
 			return MappedType { type: "void" }
 		}

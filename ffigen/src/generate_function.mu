@@ -1,7 +1,7 @@
 mapFunction(s AppState, cursor CXCursor) {
 	cname := convertString(clang_getCursorSpelling(cursor))
 	if !isIdentifier(cname) {
-		Stderr.writeLine(format("Warning: encountered strange enum member name, ignoring: {}", cname))
+		Stderr.writeLine(format("Warning: encountered strange function name, ignoring: {}", cname))
 		return
 	}
 
@@ -53,7 +53,7 @@ mapFunction(s AppState, cursor CXCursor) {
 
 mapFunctionPointer(s AppState, name string, funcType CXType) {
 	if !isIdentifier(name) {
-		Stderr.writeLine(format("Warning: encountered strange function pointer, ignoring: {}", name))
+		Stderr.writeLine(format("Warning: encountered strange function pointer name, ignoring: {}", name))
 		return
 	}
 

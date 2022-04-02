@@ -29,7 +29,7 @@ clang_VirtualFileOverlay_create(options uint) pointer #As("CXVirtualFileOverlay"
 clang_VirtualFileOverlay_addFileMapping(p0 pointer #As("CXVirtualFileOverlay"), virtualPath *sbyte, realPath *sbyte) CXErrorCode #As("enum CXErrorCode") #Foreign("clang_VirtualFileOverlay_addFileMapping")
 clang_VirtualFileOverlay_setCaseSensitivity(p0 pointer #As("CXVirtualFileOverlay"), caseSensitive int) CXErrorCode #As("enum CXErrorCode") #Foreign("clang_VirtualFileOverlay_setCaseSensitivity")
 clang_VirtualFileOverlay_writeToBuffer(p0 pointer #As("CXVirtualFileOverlay"), options uint, out_buffer_ptr **sbyte, out_buffer_size *uint) CXErrorCode #As("enum CXErrorCode") #Foreign("clang_VirtualFileOverlay_writeToBuffer")
-clang_free(buffer pointer) void #Foreign("clang_free")
+clang_free(buffer pointer #As("void *")) void #Foreign("clang_free")
 clang_VirtualFileOverlay_dispose(p0 pointer #As("CXVirtualFileOverlay")) void #Foreign("clang_VirtualFileOverlay_dispose")
 clang_ModuleMapDescriptor_create(options uint) pointer #As("CXModuleMapDescriptor") #Foreign("clang_ModuleMapDescriptor_create")
 clang_ModuleMapDescriptor_setFrameworkModuleName(p0 pointer #As("CXModuleMapDescriptor"), name *sbyte) CXErrorCode #As("enum CXErrorCode") #Foreign("clang_ModuleMapDescriptor_setFrameworkModuleName")
@@ -78,8 +78,8 @@ CXCursor_ExceptionSpecificationKind enum #Flags {
 	CXCursor_ExceptionSpecificationKind_Unparsed = 8_u
 	CXCursor_ExceptionSpecificationKind_NoThrow = 9_u
 }
-clang_createIndex(excludeDeclarationsFromPCH int, displayDiagnostics int) pointer #Foreign("clang_createIndex")
-clang_disposeIndex(index pointer) void #Foreign("clang_disposeIndex")
+clang_createIndex(excludeDeclarationsFromPCH int, displayDiagnostics int) pointer #As("CXIndex") #Foreign("clang_createIndex")
+clang_disposeIndex(index pointer #As("CXIndex")) void #Foreign("clang_disposeIndex")
 :CXGlobalOpt_None int = 0
 :CXGlobalOpt_ThreadBackgroundPriorityForIndexing int = 1
 :CXGlobalOpt_ThreadBackgroundPriorityForEditing int = 2
@@ -90,22 +90,22 @@ CXGlobalOptFlags enum #Flags {
 	CXGlobalOpt_ThreadBackgroundPriorityForEditing = 2_u
 	CXGlobalOpt_ThreadBackgroundPriorityForAll = 3_u
 }
-clang_CXIndex_setGlobalOptions(p0 pointer, options uint) void #Foreign("clang_CXIndex_setGlobalOptions")
-clang_CXIndex_getGlobalOptions(p0 pointer) uint #Foreign("clang_CXIndex_getGlobalOptions")
-clang_CXIndex_setInvocationEmissionPathOption(p0 pointer, Path *sbyte) void #Foreign("clang_CXIndex_setInvocationEmissionPathOption")
-clang_getFileName(SFile pointer) CXString #As("CXString") #Foreign("clang_getFileName")
-clang_getFileTime(SFile pointer) long #Foreign("clang_getFileTime")
+clang_CXIndex_setGlobalOptions(p0 pointer #As("CXIndex"), options uint) void #Foreign("clang_CXIndex_setGlobalOptions")
+clang_CXIndex_getGlobalOptions(p0 pointer #As("CXIndex")) uint #Foreign("clang_CXIndex_getGlobalOptions")
+clang_CXIndex_setInvocationEmissionPathOption(p0 pointer #As("CXIndex"), Path *sbyte) void #Foreign("clang_CXIndex_setInvocationEmissionPathOption")
+clang_getFileName(SFile pointer #As("CXFile")) CXString #As("CXString") #Foreign("clang_getFileName")
+clang_getFileTime(SFile pointer #As("CXFile")) long #Foreign("clang_getFileTime")
 CXFileUniqueID struct {
 	data_0 ulong
 	data_1 ulong
 	data_2 ulong
 }
-clang_getFileUniqueID(file pointer, outID *CXFileUniqueID #As("CXFileUniqueID *")) int #Foreign("clang_getFileUniqueID")
-clang_isFileMultipleIncludeGuarded(tu pointer #As("CXTranslationUnit"), file pointer) uint #Foreign("clang_isFileMultipleIncludeGuarded")
-clang_getFile(tu pointer #As("CXTranslationUnit"), file_name *sbyte) pointer #Foreign("clang_getFile")
-clang_getFileContents(tu pointer #As("CXTranslationUnit"), file pointer, size *ulong) *sbyte #Foreign("clang_getFileContents")
-clang_File_isEqual(file1 pointer, file2 pointer) int #Foreign("clang_File_isEqual")
-clang_File_tryGetRealPathName(file pointer) CXString #As("CXString") #Foreign("clang_File_tryGetRealPathName")
+clang_getFileUniqueID(file pointer #As("CXFile"), outID *CXFileUniqueID #As("CXFileUniqueID *")) int #Foreign("clang_getFileUniqueID")
+clang_isFileMultipleIncludeGuarded(tu pointer #As("CXTranslationUnit"), file pointer #As("CXFile")) uint #Foreign("clang_isFileMultipleIncludeGuarded")
+clang_getFile(tu pointer #As("CXTranslationUnit"), file_name *sbyte) pointer #As("CXFile") #Foreign("clang_getFile")
+clang_getFileContents(tu pointer #As("CXTranslationUnit"), file pointer #As("CXFile"), size *ulong) *sbyte #Foreign("clang_getFileContents")
+clang_File_isEqual(file1 pointer #As("CXFile"), file2 pointer #As("CXFile")) int #Foreign("clang_File_isEqual")
+clang_File_tryGetRealPathName(file pointer #As("CXFile")) CXString #As("CXString") #Foreign("clang_File_tryGetRealPathName")
 CXSourceLocation struct {
 	ptr_data_0 pointer
 	ptr_data_1 pointer
@@ -119,26 +119,26 @@ CXSourceRange struct {
 }
 clang_getNullLocation() CXSourceLocation #As("CXSourceLocation") #Foreign("clang_getNullLocation")
 clang_equalLocations(loc1 CXSourceLocation #As("CXSourceLocation"), loc2 CXSourceLocation #As("CXSourceLocation")) uint #Foreign("clang_equalLocations")
-clang_getLocation(tu pointer #As("CXTranslationUnit"), file pointer, line uint, column uint) CXSourceLocation #As("CXSourceLocation") #Foreign("clang_getLocation")
-clang_getLocationForOffset(tu pointer #As("CXTranslationUnit"), file pointer, offset uint) CXSourceLocation #As("CXSourceLocation") #Foreign("clang_getLocationForOffset")
+clang_getLocation(tu pointer #As("CXTranslationUnit"), file pointer #As("CXFile"), line uint, column uint) CXSourceLocation #As("CXSourceLocation") #Foreign("clang_getLocation")
+clang_getLocationForOffset(tu pointer #As("CXTranslationUnit"), file pointer #As("CXFile"), offset uint) CXSourceLocation #As("CXSourceLocation") #Foreign("clang_getLocationForOffset")
 clang_Location_isInSystemHeader(location CXSourceLocation #As("CXSourceLocation")) int #Foreign("clang_Location_isInSystemHeader")
 clang_Location_isFromMainFile(location CXSourceLocation #As("CXSourceLocation")) int #Foreign("clang_Location_isFromMainFile")
 clang_getNullRange() CXSourceRange #As("CXSourceRange") #Foreign("clang_getNullRange")
 clang_getRange(begin CXSourceLocation #As("CXSourceLocation"), end CXSourceLocation #As("CXSourceLocation")) CXSourceRange #As("CXSourceRange") #Foreign("clang_getRange")
 clang_equalRanges(range1 CXSourceRange #As("CXSourceRange"), range2 CXSourceRange #As("CXSourceRange")) uint #Foreign("clang_equalRanges")
 clang_Range_isNull(range CXSourceRange #As("CXSourceRange")) int #Foreign("clang_Range_isNull")
-clang_getExpansionLocation(location CXSourceLocation #As("CXSourceLocation"), file *pointer, line *uint, column *uint, offset *uint) void #Foreign("clang_getExpansionLocation")
+clang_getExpansionLocation(location CXSourceLocation #As("CXSourceLocation"), file *pointer #As("CXFile *"), line *uint, column *uint, offset *uint) void #Foreign("clang_getExpansionLocation")
 clang_getPresumedLocation(location CXSourceLocation #As("CXSourceLocation"), filename *CXString #As("CXString *"), line *uint, column *uint) void #Foreign("clang_getPresumedLocation")
-clang_getInstantiationLocation(location CXSourceLocation #As("CXSourceLocation"), file *pointer, line *uint, column *uint, offset *uint) void #Foreign("clang_getInstantiationLocation")
-clang_getSpellingLocation(location CXSourceLocation #As("CXSourceLocation"), file *pointer, line *uint, column *uint, offset *uint) void #Foreign("clang_getSpellingLocation")
-clang_getFileLocation(location CXSourceLocation #As("CXSourceLocation"), file *pointer, line *uint, column *uint, offset *uint) void #Foreign("clang_getFileLocation")
+clang_getInstantiationLocation(location CXSourceLocation #As("CXSourceLocation"), file *pointer #As("CXFile *"), line *uint, column *uint, offset *uint) void #Foreign("clang_getInstantiationLocation")
+clang_getSpellingLocation(location CXSourceLocation #As("CXSourceLocation"), file *pointer #As("CXFile *"), line *uint, column *uint, offset *uint) void #Foreign("clang_getSpellingLocation")
+clang_getFileLocation(location CXSourceLocation #As("CXSourceLocation"), file *pointer #As("CXFile *"), line *uint, column *uint, offset *uint) void #Foreign("clang_getFileLocation")
 clang_getRangeStart(range CXSourceRange #As("CXSourceRange")) CXSourceLocation #As("CXSourceLocation") #Foreign("clang_getRangeStart")
 clang_getRangeEnd(range CXSourceRange #As("CXSourceRange")) CXSourceLocation #As("CXSourceLocation") #Foreign("clang_getRangeEnd")
 CXSourceRangeList struct {
 	count uint
 	ranges *CXSourceRange
 }
-clang_getSkippedRanges(tu pointer #As("CXTranslationUnit"), file pointer) *CXSourceRangeList #As("CXSourceRangeList *") #Foreign("clang_getSkippedRanges")
+clang_getSkippedRanges(tu pointer #As("CXTranslationUnit"), file pointer #As("CXFile")) *CXSourceRangeList #As("CXSourceRangeList *") #Foreign("clang_getSkippedRanges")
 clang_getAllSkippedRanges(tu pointer #As("CXTranslationUnit")) *CXSourceRangeList #As("CXSourceRangeList *") #Foreign("clang_getAllSkippedRanges")
 clang_disposeSourceRangeList(ranges *CXSourceRangeList #As("CXSourceRangeList *")) void #Foreign("clang_disposeSourceRangeList")
 :CXDiagnostic_Ignored int = 0
@@ -153,8 +153,8 @@ CXDiagnosticSeverity enum #Flags {
 	CXDiagnostic_Error = 3_u
 	CXDiagnostic_Fatal = 4_u
 }
-clang_getNumDiagnosticsInSet(Diags pointer) uint #Foreign("clang_getNumDiagnosticsInSet")
-clang_getDiagnosticInSet(Diags pointer, Index uint) pointer #Foreign("clang_getDiagnosticInSet")
+clang_getNumDiagnosticsInSet(Diags pointer #As("CXDiagnosticSet")) uint #Foreign("clang_getNumDiagnosticsInSet")
+clang_getDiagnosticInSet(Diags pointer #As("CXDiagnosticSet"), Index uint) pointer #As("CXDiagnostic") #Foreign("clang_getDiagnosticInSet")
 :CXLoadDiag_None int = 0
 :CXLoadDiag_Unknown int = 1
 :CXLoadDiag_CannotLoad int = 2
@@ -165,13 +165,13 @@ CXLoadDiag_Error enum #Flags {
 	CXLoadDiag_CannotLoad = 2_u
 	CXLoadDiag_InvalidFile = 3_u
 }
-clang_loadDiagnostics(file *sbyte, error *CXLoadDiag_Error #As("enum CXLoadDiag_Error *"), errorString *CXString #As("CXString *")) pointer #Foreign("clang_loadDiagnostics")
-clang_disposeDiagnosticSet(Diags pointer) void #Foreign("clang_disposeDiagnosticSet")
-clang_getChildDiagnostics(D pointer) pointer #Foreign("clang_getChildDiagnostics")
+clang_loadDiagnostics(file *sbyte, error *CXLoadDiag_Error #As("enum CXLoadDiag_Error *"), errorString *CXString #As("CXString *")) pointer #As("CXDiagnosticSet") #Foreign("clang_loadDiagnostics")
+clang_disposeDiagnosticSet(Diags pointer #As("CXDiagnosticSet")) void #Foreign("clang_disposeDiagnosticSet")
+clang_getChildDiagnostics(D pointer #As("CXDiagnostic")) pointer #As("CXDiagnosticSet") #Foreign("clang_getChildDiagnostics")
 clang_getNumDiagnostics(Unit pointer #As("CXTranslationUnit")) uint #Foreign("clang_getNumDiagnostics")
-clang_getDiagnostic(Unit pointer #As("CXTranslationUnit"), Index uint) pointer #Foreign("clang_getDiagnostic")
-clang_getDiagnosticSetFromTU(Unit pointer #As("CXTranslationUnit")) pointer #Foreign("clang_getDiagnosticSetFromTU")
-clang_disposeDiagnostic(Diagnostic pointer) void #Foreign("clang_disposeDiagnostic")
+clang_getDiagnostic(Unit pointer #As("CXTranslationUnit"), Index uint) pointer #As("CXDiagnostic") #Foreign("clang_getDiagnostic")
+clang_getDiagnosticSetFromTU(Unit pointer #As("CXTranslationUnit")) pointer #As("CXDiagnosticSet") #Foreign("clang_getDiagnosticSetFromTU")
+clang_disposeDiagnostic(Diagnostic pointer #As("CXDiagnostic")) void #Foreign("clang_disposeDiagnostic")
 :CXDiagnostic_DisplaySourceLocation int = 1
 :CXDiagnostic_DisplayColumn int = 2
 :CXDiagnostic_DisplaySourceRanges int = 4
@@ -186,23 +186,23 @@ CXDiagnosticDisplayOptions enum #Flags {
 	CXDiagnostic_DisplayCategoryId = 16_u
 	CXDiagnostic_DisplayCategoryName = 32_u
 }
-clang_formatDiagnostic(Diagnostic pointer, Options uint) CXString #As("CXString") #Foreign("clang_formatDiagnostic")
+clang_formatDiagnostic(Diagnostic pointer #As("CXDiagnostic"), Options uint) CXString #As("CXString") #Foreign("clang_formatDiagnostic")
 clang_defaultDiagnosticDisplayOptions() uint #Foreign("clang_defaultDiagnosticDisplayOptions")
-clang_getDiagnosticSeverity(p0 pointer) CXDiagnosticSeverity #As("enum CXDiagnosticSeverity") #Foreign("clang_getDiagnosticSeverity")
-clang_getDiagnosticLocation(p0 pointer) CXSourceLocation #As("CXSourceLocation") #Foreign("clang_getDiagnosticLocation")
-clang_getDiagnosticSpelling(p0 pointer) CXString #As("CXString") #Foreign("clang_getDiagnosticSpelling")
-clang_getDiagnosticOption(Diag pointer, Disable *CXString #As("CXString *")) CXString #As("CXString") #Foreign("clang_getDiagnosticOption")
-clang_getDiagnosticCategory(p0 pointer) uint #Foreign("clang_getDiagnosticCategory")
+clang_getDiagnosticSeverity(p0 pointer #As("CXDiagnostic")) CXDiagnosticSeverity #As("enum CXDiagnosticSeverity") #Foreign("clang_getDiagnosticSeverity")
+clang_getDiagnosticLocation(p0 pointer #As("CXDiagnostic")) CXSourceLocation #As("CXSourceLocation") #Foreign("clang_getDiagnosticLocation")
+clang_getDiagnosticSpelling(p0 pointer #As("CXDiagnostic")) CXString #As("CXString") #Foreign("clang_getDiagnosticSpelling")
+clang_getDiagnosticOption(Diag pointer #As("CXDiagnostic"), Disable *CXString #As("CXString *")) CXString #As("CXString") #Foreign("clang_getDiagnosticOption")
+clang_getDiagnosticCategory(p0 pointer #As("CXDiagnostic")) uint #Foreign("clang_getDiagnosticCategory")
 clang_getDiagnosticCategoryName(Category uint) CXString #As("CXString") #Foreign("clang_getDiagnosticCategoryName")
-clang_getDiagnosticCategoryText(p0 pointer) CXString #As("CXString") #Foreign("clang_getDiagnosticCategoryText")
-clang_getDiagnosticNumRanges(p0 pointer) uint #Foreign("clang_getDiagnosticNumRanges")
-clang_getDiagnosticRange(Diagnostic pointer, Range uint) CXSourceRange #As("CXSourceRange") #Foreign("clang_getDiagnosticRange")
-clang_getDiagnosticNumFixIts(Diagnostic pointer) uint #Foreign("clang_getDiagnosticNumFixIts")
-clang_getDiagnosticFixIt(Diagnostic pointer, FixIt uint, ReplacementRange *CXSourceRange #As("CXSourceRange *")) CXString #As("CXString") #Foreign("clang_getDiagnosticFixIt")
+clang_getDiagnosticCategoryText(p0 pointer #As("CXDiagnostic")) CXString #As("CXString") #Foreign("clang_getDiagnosticCategoryText")
+clang_getDiagnosticNumRanges(p0 pointer #As("CXDiagnostic")) uint #Foreign("clang_getDiagnosticNumRanges")
+clang_getDiagnosticRange(Diagnostic pointer #As("CXDiagnostic"), Range uint) CXSourceRange #As("CXSourceRange") #Foreign("clang_getDiagnosticRange")
+clang_getDiagnosticNumFixIts(Diagnostic pointer #As("CXDiagnostic")) uint #Foreign("clang_getDiagnosticNumFixIts")
+clang_getDiagnosticFixIt(Diagnostic pointer #As("CXDiagnostic"), FixIt uint, ReplacementRange *CXSourceRange #As("CXSourceRange *")) CXString #As("CXString") #Foreign("clang_getDiagnosticFixIt")
 clang_getTranslationUnitSpelling(CTUnit pointer #As("CXTranslationUnit")) CXString #As("CXString") #Foreign("clang_getTranslationUnitSpelling")
-clang_createTranslationUnitFromSourceFile(CIdx pointer, source_filename *sbyte, num_clang_command_line_args int, clang_command_line_args **sbyte, num_unsaved_files uint, unsaved_files *CXUnsavedFile #As("struct CXUnsavedFile *")) pointer #As("CXTranslationUnit") #Foreign("clang_createTranslationUnitFromSourceFile")
-clang_createTranslationUnit(CIdx pointer, ast_filename *sbyte) pointer #As("CXTranslationUnit") #Foreign("clang_createTranslationUnit")
-clang_createTranslationUnit2(CIdx pointer, ast_filename *sbyte, out_TU *pointer #As("CXTranslationUnit *")) CXErrorCode #As("enum CXErrorCode") #Foreign("clang_createTranslationUnit2")
+clang_createTranslationUnitFromSourceFile(CIdx pointer #As("CXIndex"), source_filename *sbyte, num_clang_command_line_args int, clang_command_line_args **sbyte, num_unsaved_files uint, unsaved_files *CXUnsavedFile #As("struct CXUnsavedFile *")) pointer #As("CXTranslationUnit") #Foreign("clang_createTranslationUnitFromSourceFile")
+clang_createTranslationUnit(CIdx pointer #As("CXIndex"), ast_filename *sbyte) pointer #As("CXTranslationUnit") #Foreign("clang_createTranslationUnit")
+clang_createTranslationUnit2(CIdx pointer #As("CXIndex"), ast_filename *sbyte, out_TU *pointer #As("CXTranslationUnit *")) CXErrorCode #As("enum CXErrorCode") #Foreign("clang_createTranslationUnit2")
 :CXTranslationUnit_None int = 0
 :CXTranslationUnit_DetailedPreprocessingRecord int = 1
 :CXTranslationUnit_Incomplete int = 2
@@ -240,9 +240,9 @@ CXTranslationUnit_Flags enum #Flags {
 	CXTranslationUnit_RetainExcludedConditionalBlocks = 32768_u
 }
 clang_defaultEditingTranslationUnitOptions() uint #Foreign("clang_defaultEditingTranslationUnitOptions")
-clang_parseTranslationUnit(CIdx pointer, source_filename cstring, command_line_args *cstring, num_command_line_args int, unsaved_files *CXUnsavedFile #As("struct CXUnsavedFile *"), num_unsaved_files uint, options uint) pointer #As("CXTranslationUnit") #Foreign("clang_parseTranslationUnit")
-clang_parseTranslationUnit2(CIdx pointer, source_filename *sbyte, command_line_args **sbyte, num_command_line_args int, unsaved_files *CXUnsavedFile #As("struct CXUnsavedFile *"), num_unsaved_files uint, options uint, out_TU *pointer #As("CXTranslationUnit *")) CXErrorCode #As("enum CXErrorCode") #Foreign("clang_parseTranslationUnit2")
-clang_parseTranslationUnit2FullArgv(CIdx pointer, source_filename *sbyte, command_line_args **sbyte, num_command_line_args int, unsaved_files *CXUnsavedFile #As("struct CXUnsavedFile *"), num_unsaved_files uint, options uint, out_TU *pointer #As("CXTranslationUnit *")) CXErrorCode #As("enum CXErrorCode") #Foreign("clang_parseTranslationUnit2FullArgv")
+clang_parseTranslationUnit(CIdx pointer #As("CXIndex"), source_filename cstring, command_line_args *cstring, num_command_line_args int, unsaved_files *CXUnsavedFile #As("struct CXUnsavedFile *"), num_unsaved_files uint, options uint) pointer #As("CXTranslationUnit") #Foreign("clang_parseTranslationUnit")
+clang_parseTranslationUnit2(CIdx pointer #As("CXIndex"), source_filename *sbyte, command_line_args **sbyte, num_command_line_args int, unsaved_files *CXUnsavedFile #As("struct CXUnsavedFile *"), num_unsaved_files uint, options uint, out_TU *pointer #As("CXTranslationUnit *")) CXErrorCode #As("enum CXErrorCode") #Foreign("clang_parseTranslationUnit2")
+clang_parseTranslationUnit2FullArgv(CIdx pointer #As("CXIndex"), source_filename *sbyte, command_line_args **sbyte, num_command_line_args int, unsaved_files *CXUnsavedFile #As("struct CXUnsavedFile *"), num_unsaved_files uint, options uint, out_TU *pointer #As("CXTranslationUnit *")) CXErrorCode #As("enum CXErrorCode") #Foreign("clang_parseTranslationUnit2FullArgv")
 :CXSaveTranslationUnit_None int = 0
 CXSaveTranslationUnit_Flags enum #Flags {
 	CXSaveTranslationUnit_None = 0_u
@@ -956,7 +956,7 @@ clang_getCursorSemanticParent(cursor CXCursor #As("CXCursor")) CXCursor #As("CXC
 clang_getCursorLexicalParent(cursor CXCursor #As("CXCursor")) CXCursor #As("CXCursor") #Foreign("clang_getCursorLexicalParent")
 clang_getOverriddenCursors(cursor CXCursor #As("CXCursor"), overridden **CXCursor #As("CXCursor **"), num_overridden *uint) void #Foreign("clang_getOverriddenCursors")
 clang_disposeOverriddenCursors(overridden *CXCursor #As("CXCursor *")) void #Foreign("clang_disposeOverriddenCursors")
-clang_getIncludedFile(cursor CXCursor #As("CXCursor")) pointer #Foreign("clang_getIncludedFile")
+clang_getIncludedFile(cursor CXCursor #As("CXCursor")) pointer #As("CXFile") #Foreign("clang_getIncludedFile")
 clang_getCursor(p0 pointer #As("CXTranslationUnit"), p1 CXSourceLocation #As("CXSourceLocation")) CXCursor #As("CXCursor") #Foreign("clang_getCursor")
 clang_getCursorLocation(p0 CXCursor #As("CXCursor")) CXSourceLocation #As("CXSourceLocation") #Foreign("clang_getCursorLocation")
 clang_getCursorExtent(p0 CXCursor #As("CXCursor")) CXSourceRange #As("CXSourceRange") #Foreign("clang_getCursorExtent")
@@ -1413,7 +1413,7 @@ CXChildVisitResult enum #Flags {
 	CXChildVisit_Continue = 1_u
 	CXChildVisit_Recurse = 2_u
 }
-clang_visitChildren(parent CXCursor #As("CXCursor"), visitor pointer #As("CXCursorVisitor"), client_data pointer) uint #Foreign("clang_visitChildren")
+clang_visitChildren(parent CXCursor #As("CXCursor"), visitor pointer #As("CXCursorVisitor"), client_data pointer #As("CXClientData")) uint #Foreign("clang_visitChildren")
 clang_getCursorUSR(p0 CXCursor #As("CXCursor")) CXString #As("CXString") #Foreign("clang_getCursorUSR")
 clang_constructUSR_ObjCClass(class_name *sbyte) CXString #As("CXString") #Foreign("clang_constructUSR_ObjCClass")
 clang_constructUSR_ObjCCategory(class_name *sbyte, category_name *sbyte) CXString #As("CXString") #Foreign("clang_constructUSR_ObjCCategory")
@@ -1479,11 +1479,11 @@ CXPrintingPolicyProperty enum #Flags {
 	CXPrintingPolicy_FullyQualifiedName = 25_u
 	CXPrintingPolicy_LastProperty = 25_u
 }
-clang_PrintingPolicy_getProperty(Policy pointer, Property CXPrintingPolicyProperty #As("enum CXPrintingPolicyProperty")) uint #Foreign("clang_PrintingPolicy_getProperty")
-clang_PrintingPolicy_setProperty(Policy pointer, Property CXPrintingPolicyProperty #As("enum CXPrintingPolicyProperty"), Value uint) void #Foreign("clang_PrintingPolicy_setProperty")
-clang_getCursorPrintingPolicy(p0 CXCursor #As("CXCursor")) pointer #Foreign("clang_getCursorPrintingPolicy")
-clang_PrintingPolicy_dispose(Policy pointer) void #Foreign("clang_PrintingPolicy_dispose")
-clang_getCursorPrettyPrinted(Cursor CXCursor #As("CXCursor"), Policy pointer) CXString #As("CXString") #Foreign("clang_getCursorPrettyPrinted")
+clang_PrintingPolicy_getProperty(Policy pointer #As("CXPrintingPolicy"), Property CXPrintingPolicyProperty #As("enum CXPrintingPolicyProperty")) uint #Foreign("clang_PrintingPolicy_getProperty")
+clang_PrintingPolicy_setProperty(Policy pointer #As("CXPrintingPolicy"), Property CXPrintingPolicyProperty #As("enum CXPrintingPolicyProperty"), Value uint) void #Foreign("clang_PrintingPolicy_setProperty")
+clang_getCursorPrintingPolicy(p0 CXCursor #As("CXCursor")) pointer #As("CXPrintingPolicy") #Foreign("clang_getCursorPrintingPolicy")
+clang_PrintingPolicy_dispose(Policy pointer #As("CXPrintingPolicy")) void #Foreign("clang_PrintingPolicy_dispose")
+clang_getCursorPrettyPrinted(Cursor CXCursor #As("CXCursor"), Policy pointer #As("CXPrintingPolicy")) CXString #As("CXString") #Foreign("clang_getCursorPrettyPrinted")
 clang_getCursorDisplayName(p0 CXCursor #As("CXCursor")) CXString #As("CXString") #Foreign("clang_getCursorDisplayName")
 clang_getCursorReferenced(p0 CXCursor #As("CXCursor")) CXCursor #As("CXCursor") #Foreign("clang_getCursorReferenced")
 clang_getCursorDefinition(p0 CXCursor #As("CXCursor")) CXCursor #As("CXCursor") #Foreign("clang_getCursorDefinition")
@@ -1551,15 +1551,15 @@ clang_Cursor_getBriefCommentText(C CXCursor #As("CXCursor")) CXString #As("CXStr
 clang_Cursor_getMangling(p0 CXCursor #As("CXCursor")) CXString #As("CXString") #Foreign("clang_Cursor_getMangling")
 clang_Cursor_getCXXManglings(p0 CXCursor #As("CXCursor")) *CXStringSet #As("CXStringSet *") #Foreign("clang_Cursor_getCXXManglings")
 clang_Cursor_getObjCManglings(p0 CXCursor #As("CXCursor")) *CXStringSet #As("CXStringSet *") #Foreign("clang_Cursor_getObjCManglings")
-clang_Cursor_getModule(C CXCursor #As("CXCursor")) pointer #Foreign("clang_Cursor_getModule")
-clang_getModuleForFile(p0 pointer #As("CXTranslationUnit"), p1 pointer) pointer #Foreign("clang_getModuleForFile")
-clang_Module_getASTFile(Module pointer) pointer #Foreign("clang_Module_getASTFile")
-clang_Module_getParent(Module pointer) pointer #Foreign("clang_Module_getParent")
-clang_Module_getName(Module pointer) CXString #As("CXString") #Foreign("clang_Module_getName")
-clang_Module_getFullName(Module pointer) CXString #As("CXString") #Foreign("clang_Module_getFullName")
-clang_Module_isSystem(Module pointer) int #Foreign("clang_Module_isSystem")
-clang_Module_getNumTopLevelHeaders(p0 pointer #As("CXTranslationUnit"), Module pointer) uint #Foreign("clang_Module_getNumTopLevelHeaders")
-clang_Module_getTopLevelHeader(p0 pointer #As("CXTranslationUnit"), Module pointer, Index uint) pointer #Foreign("clang_Module_getTopLevelHeader")
+clang_Cursor_getModule(C CXCursor #As("CXCursor")) pointer #As("CXModule") #Foreign("clang_Cursor_getModule")
+clang_getModuleForFile(p0 pointer #As("CXTranslationUnit"), p1 pointer #As("CXFile")) pointer #As("CXModule") #Foreign("clang_getModuleForFile")
+clang_Module_getASTFile(Module pointer #As("CXModule")) pointer #As("CXFile") #Foreign("clang_Module_getASTFile")
+clang_Module_getParent(Module pointer #As("CXModule")) pointer #As("CXModule") #Foreign("clang_Module_getParent")
+clang_Module_getName(Module pointer #As("CXModule")) CXString #As("CXString") #Foreign("clang_Module_getName")
+clang_Module_getFullName(Module pointer #As("CXModule")) CXString #As("CXString") #Foreign("clang_Module_getFullName")
+clang_Module_isSystem(Module pointer #As("CXModule")) int #Foreign("clang_Module_isSystem")
+clang_Module_getNumTopLevelHeaders(p0 pointer #As("CXTranslationUnit"), Module pointer #As("CXModule")) uint #Foreign("clang_Module_getNumTopLevelHeaders")
+clang_Module_getTopLevelHeader(p0 pointer #As("CXTranslationUnit"), Module pointer #As("CXModule"), Index uint) pointer #As("CXFile") #Foreign("clang_Module_getTopLevelHeader")
 clang_CXXConstructor_isConvertingConstructor(C CXCursor #As("CXCursor")) uint #Foreign("clang_CXXConstructor_isConvertingConstructor")
 clang_CXXConstructor_isCopyConstructor(C CXCursor #As("CXCursor")) uint #Foreign("clang_CXXConstructor_isCopyConstructor")
 clang_CXXConstructor_isDefaultConstructor(C CXCursor #As("CXCursor")) uint #Foreign("clang_CXXConstructor_isDefaultConstructor")
@@ -1613,7 +1613,7 @@ clang_disposeTokens(TU pointer #As("CXTranslationUnit"), Tokens *CXToken #As("CX
 clang_getCursorKindSpelling(Kind CXCursorKind #As("enum CXCursorKind")) CXString #As("CXString") #Foreign("clang_getCursorKindSpelling")
 clang_getDefinitionSpellingAndExtent(p0 CXCursor #As("CXCursor"), startBuf **sbyte, endBuf **sbyte, startLine *uint, startColumn *uint, endLine *uint, endColumn *uint) void #Foreign("clang_getDefinitionSpellingAndExtent")
 clang_enableStackTraces() void #Foreign("clang_enableStackTraces")
-clang_executeOnThread(fn pointer #As("void (*)(void *)"), user_data pointer, stack_size uint) void #Foreign("clang_executeOnThread")
+clang_executeOnThread(fn pointer #As("void (*)(void *)"), user_data pointer #As("void *"), stack_size uint) void #Foreign("clang_executeOnThread")
 CXCompletionResult struct {
 	CursorKind CXCursorKind
 	CompletionString pointer
@@ -1662,17 +1662,17 @@ CXCompletionChunkKind enum #Flags {
 	CXCompletionChunk_HorizontalSpace = 19_u
 	CXCompletionChunk_VerticalSpace = 20_u
 }
-clang_getCompletionChunkKind(completion_string pointer, chunk_number uint) CXCompletionChunkKind #As("enum CXCompletionChunkKind") #Foreign("clang_getCompletionChunkKind")
-clang_getCompletionChunkText(completion_string pointer, chunk_number uint) CXString #As("CXString") #Foreign("clang_getCompletionChunkText")
-clang_getCompletionChunkCompletionString(completion_string pointer, chunk_number uint) pointer #Foreign("clang_getCompletionChunkCompletionString")
-clang_getNumCompletionChunks(completion_string pointer) uint #Foreign("clang_getNumCompletionChunks")
-clang_getCompletionPriority(completion_string pointer) uint #Foreign("clang_getCompletionPriority")
-clang_getCompletionAvailability(completion_string pointer) CXAvailabilityKind #As("enum CXAvailabilityKind") #Foreign("clang_getCompletionAvailability")
-clang_getCompletionNumAnnotations(completion_string pointer) uint #Foreign("clang_getCompletionNumAnnotations")
-clang_getCompletionAnnotation(completion_string pointer, annotation_number uint) CXString #As("CXString") #Foreign("clang_getCompletionAnnotation")
-clang_getCompletionParent(completion_string pointer, kind *CXCursorKind #As("enum CXCursorKind *")) CXString #As("CXString") #Foreign("clang_getCompletionParent")
-clang_getCompletionBriefComment(completion_string pointer) CXString #As("CXString") #Foreign("clang_getCompletionBriefComment")
-clang_getCursorCompletionString(cursor CXCursor #As("CXCursor")) pointer #Foreign("clang_getCursorCompletionString")
+clang_getCompletionChunkKind(completion_string pointer #As("CXCompletionString"), chunk_number uint) CXCompletionChunkKind #As("enum CXCompletionChunkKind") #Foreign("clang_getCompletionChunkKind")
+clang_getCompletionChunkText(completion_string pointer #As("CXCompletionString"), chunk_number uint) CXString #As("CXString") #Foreign("clang_getCompletionChunkText")
+clang_getCompletionChunkCompletionString(completion_string pointer #As("CXCompletionString"), chunk_number uint) pointer #As("CXCompletionString") #Foreign("clang_getCompletionChunkCompletionString")
+clang_getNumCompletionChunks(completion_string pointer #As("CXCompletionString")) uint #Foreign("clang_getNumCompletionChunks")
+clang_getCompletionPriority(completion_string pointer #As("CXCompletionString")) uint #Foreign("clang_getCompletionPriority")
+clang_getCompletionAvailability(completion_string pointer #As("CXCompletionString")) CXAvailabilityKind #As("enum CXAvailabilityKind") #Foreign("clang_getCompletionAvailability")
+clang_getCompletionNumAnnotations(completion_string pointer #As("CXCompletionString")) uint #Foreign("clang_getCompletionNumAnnotations")
+clang_getCompletionAnnotation(completion_string pointer #As("CXCompletionString"), annotation_number uint) CXString #As("CXString") #Foreign("clang_getCompletionAnnotation")
+clang_getCompletionParent(completion_string pointer #As("CXCompletionString"), kind *CXCursorKind #As("enum CXCursorKind *")) CXString #As("CXString") #Foreign("clang_getCompletionParent")
+clang_getCompletionBriefComment(completion_string pointer #As("CXCompletionString")) CXString #As("CXString") #Foreign("clang_getCompletionBriefComment")
+clang_getCursorCompletionString(cursor CXCursor #As("CXCursor")) pointer #As("CXCompletionString") #Foreign("clang_getCursorCompletionString")
 CXCodeCompleteResults struct {
 	Results *CXCompletionResult
 	NumResults uint
@@ -1748,14 +1748,14 @@ clang_codeCompleteAt(TU pointer #As("CXTranslationUnit"), complete_filename *sby
 clang_sortCodeCompletionResults(Results *CXCompletionResult #As("CXCompletionResult *"), NumResults uint) void #Foreign("clang_sortCodeCompletionResults")
 clang_disposeCodeCompleteResults(Results *CXCodeCompleteResults #As("CXCodeCompleteResults *")) void #Foreign("clang_disposeCodeCompleteResults")
 clang_codeCompleteGetNumDiagnostics(Results *CXCodeCompleteResults #As("CXCodeCompleteResults *")) uint #Foreign("clang_codeCompleteGetNumDiagnostics")
-clang_codeCompleteGetDiagnostic(Results *CXCodeCompleteResults #As("CXCodeCompleteResults *"), Index uint) pointer #Foreign("clang_codeCompleteGetDiagnostic")
+clang_codeCompleteGetDiagnostic(Results *CXCodeCompleteResults #As("CXCodeCompleteResults *"), Index uint) pointer #As("CXDiagnostic") #Foreign("clang_codeCompleteGetDiagnostic")
 clang_codeCompleteGetContexts(Results *CXCodeCompleteResults #As("CXCodeCompleteResults *")) ulong #Foreign("clang_codeCompleteGetContexts")
 clang_codeCompleteGetContainerKind(Results *CXCodeCompleteResults #As("CXCodeCompleteResults *"), IsIncomplete *uint) CXCursorKind #As("enum CXCursorKind") #Foreign("clang_codeCompleteGetContainerKind")
 clang_codeCompleteGetContainerUSR(Results *CXCodeCompleteResults #As("CXCodeCompleteResults *")) CXString #As("CXString") #Foreign("clang_codeCompleteGetContainerUSR")
 clang_codeCompleteGetObjCSelector(Results *CXCodeCompleteResults #As("CXCodeCompleteResults *")) CXString #As("CXString") #Foreign("clang_codeCompleteGetObjCSelector")
 clang_getClangVersion() CXString #As("CXString") #Foreign("clang_getClangVersion")
 clang_toggleCrashRecovery(isEnabled uint) void #Foreign("clang_toggleCrashRecovery")
-clang_getInclusions(tu pointer #As("CXTranslationUnit"), visitor pointer #As("CXInclusionVisitor"), client_data pointer) void #Foreign("clang_getInclusions")
+clang_getInclusions(tu pointer #As("CXTranslationUnit"), visitor pointer #As("CXInclusionVisitor"), client_data pointer #As("CXClientData")) void #Foreign("clang_getInclusions")
 :CXEval_Int int = 1
 :CXEval_Float int = 2
 :CXEval_ObjCStrLiteral int = 3
@@ -1772,20 +1772,20 @@ CXEvalResultKind enum #Flags {
 	CXEval_Other = 6_u
 	CXEval_UnExposed = 0_u
 }
-clang_Cursor_Evaluate(C CXCursor #As("CXCursor")) pointer #Foreign("clang_Cursor_Evaluate")
-clang_EvalResult_getKind(E pointer) CXEvalResultKind #As("CXEvalResultKind") #Foreign("clang_EvalResult_getKind")
-clang_EvalResult_getAsInt(E pointer) int #Foreign("clang_EvalResult_getAsInt")
-clang_EvalResult_getAsLongLong(E pointer) long #Foreign("clang_EvalResult_getAsLongLong")
-clang_EvalResult_isUnsignedInt(E pointer) uint #Foreign("clang_EvalResult_isUnsignedInt")
-clang_EvalResult_getAsUnsigned(E pointer) ulong #Foreign("clang_EvalResult_getAsUnsigned")
-clang_EvalResult_getAsDouble(E pointer) double #Foreign("clang_EvalResult_getAsDouble")
-clang_EvalResult_getAsStr(E pointer) cstring #Foreign("clang_EvalResult_getAsStr")
-clang_EvalResult_dispose(E pointer) void #Foreign("clang_EvalResult_dispose")
-clang_getRemappings(path *sbyte) pointer #Foreign("clang_getRemappings")
-clang_getRemappingsFromFileList(filePaths **sbyte, numFiles uint) pointer #Foreign("clang_getRemappingsFromFileList")
-clang_remap_getNumFiles(p0 pointer) uint #Foreign("clang_remap_getNumFiles")
-clang_remap_getFilenames(p0 pointer, index uint, original *CXString #As("CXString *"), transformed *CXString #As("CXString *")) void #Foreign("clang_remap_getFilenames")
-clang_remap_dispose(p0 pointer) void #Foreign("clang_remap_dispose")
+clang_Cursor_Evaluate(C CXCursor #As("CXCursor")) pointer #As("CXEvalResult") #Foreign("clang_Cursor_Evaluate")
+clang_EvalResult_getKind(E pointer #As("CXEvalResult")) CXEvalResultKind #As("CXEvalResultKind") #Foreign("clang_EvalResult_getKind")
+clang_EvalResult_getAsInt(E pointer #As("CXEvalResult")) int #Foreign("clang_EvalResult_getAsInt")
+clang_EvalResult_getAsLongLong(E pointer #As("CXEvalResult")) long #Foreign("clang_EvalResult_getAsLongLong")
+clang_EvalResult_isUnsignedInt(E pointer #As("CXEvalResult")) uint #Foreign("clang_EvalResult_isUnsignedInt")
+clang_EvalResult_getAsUnsigned(E pointer #As("CXEvalResult")) ulong #Foreign("clang_EvalResult_getAsUnsigned")
+clang_EvalResult_getAsDouble(E pointer #As("CXEvalResult")) double #Foreign("clang_EvalResult_getAsDouble")
+clang_EvalResult_getAsStr(E pointer #As("CXEvalResult")) cstring #Foreign("clang_EvalResult_getAsStr")
+clang_EvalResult_dispose(E pointer #As("CXEvalResult")) void #Foreign("clang_EvalResult_dispose")
+clang_getRemappings(path *sbyte) pointer #As("CXRemapping") #Foreign("clang_getRemappings")
+clang_getRemappingsFromFileList(filePaths **sbyte, numFiles uint) pointer #As("CXRemapping") #Foreign("clang_getRemappingsFromFileList")
+clang_remap_getNumFiles(p0 pointer #As("CXRemapping")) uint #Foreign("clang_remap_getNumFiles")
+clang_remap_getFilenames(p0 pointer #As("CXRemapping"), index uint, original *CXString #As("CXString *"), transformed *CXString #As("CXString *")) void #Foreign("clang_remap_getFilenames")
+clang_remap_dispose(p0 pointer #As("CXRemapping")) void #Foreign("clang_remap_dispose")
 :CXVisit_Break int = 0
 :CXVisit_Continue int = 1
 CXVisitorResult enum #Flags {
@@ -1804,8 +1804,8 @@ CXResult enum #Flags {
 	CXResult_Invalid = 1_u
 	CXResult_VisitBreak = 2_u
 }
-clang_findReferencesInFile(cursor CXCursor #As("CXCursor"), file pointer, visitor CXCursorAndRangeVisitor #As("CXCursorAndRangeVisitor")) CXResult #As("CXResult") #Foreign("clang_findReferencesInFile")
-clang_findIncludesInFile(TU pointer #As("CXTranslationUnit"), file pointer, visitor CXCursorAndRangeVisitor #As("CXCursorAndRangeVisitor")) CXResult #As("CXResult") #Foreign("clang_findIncludesInFile")
+clang_findReferencesInFile(cursor CXCursor #As("CXCursor"), file pointer #As("CXFile"), visitor CXCursorAndRangeVisitor #As("CXCursorAndRangeVisitor")) CXResult #As("CXResult") #Foreign("clang_findReferencesInFile")
+clang_findIncludesInFile(TU pointer #As("CXTranslationUnit"), file pointer #As("CXFile"), visitor CXCursorAndRangeVisitor #As("CXCursorAndRangeVisitor")) CXResult #As("CXResult") #Foreign("clang_findIncludesInFile")
 CXIdxLoc struct {
 	ptr_data_0 pointer
 	ptr_data_1 pointer
@@ -2049,12 +2049,12 @@ clang_index_getObjCProtocolRefListInfo(p0 *CXIdxDeclInfo #As("const CXIdxDeclInf
 clang_index_getObjCPropertyDeclInfo(p0 *CXIdxDeclInfo #As("const CXIdxDeclInfo *")) *CXIdxObjCPropertyDeclInfo #As("const CXIdxObjCPropertyDeclInfo *") #Foreign("clang_index_getObjCPropertyDeclInfo")
 clang_index_getIBOutletCollectionAttrInfo(p0 *CXIdxAttrInfo #As("const CXIdxAttrInfo *")) *CXIdxIBOutletCollectionAttrInfo #As("const CXIdxIBOutletCollectionAttrInfo *") #Foreign("clang_index_getIBOutletCollectionAttrInfo")
 clang_index_getCXXClassDeclInfo(p0 *CXIdxDeclInfo #As("const CXIdxDeclInfo *")) *CXIdxCXXClassDeclInfo #As("const CXIdxCXXClassDeclInfo *") #Foreign("clang_index_getCXXClassDeclInfo")
-clang_index_getClientContainer(p0 *CXIdxContainerInfo #As("const CXIdxContainerInfo *")) pointer #Foreign("clang_index_getClientContainer")
-clang_index_setClientContainer(p0 *CXIdxContainerInfo #As("const CXIdxContainerInfo *"), p1 pointer) void #Foreign("clang_index_setClientContainer")
-clang_index_getClientEntity(p0 *CXIdxEntityInfo #As("const CXIdxEntityInfo *")) pointer #Foreign("clang_index_getClientEntity")
-clang_index_setClientEntity(p0 *CXIdxEntityInfo #As("const CXIdxEntityInfo *"), p1 pointer) void #Foreign("clang_index_setClientEntity")
-clang_IndexAction_create(CIdx pointer) pointer #Foreign("clang_IndexAction_create")
-clang_IndexAction_dispose(p0 pointer) void #Foreign("clang_IndexAction_dispose")
+clang_index_getClientContainer(p0 *CXIdxContainerInfo #As("const CXIdxContainerInfo *")) pointer #As("CXIdxClientContainer") #Foreign("clang_index_getClientContainer")
+clang_index_setClientContainer(p0 *CXIdxContainerInfo #As("const CXIdxContainerInfo *"), p1 pointer #As("CXIdxClientContainer")) void #Foreign("clang_index_setClientContainer")
+clang_index_getClientEntity(p0 *CXIdxEntityInfo #As("const CXIdxEntityInfo *")) pointer #As("CXIdxClientEntity") #Foreign("clang_index_getClientEntity")
+clang_index_setClientEntity(p0 *CXIdxEntityInfo #As("const CXIdxEntityInfo *"), p1 pointer #As("CXIdxClientEntity")) void #Foreign("clang_index_setClientEntity")
+clang_IndexAction_create(CIdx pointer #As("CXIndex")) pointer #As("CXIndexAction") #Foreign("clang_IndexAction_create")
+clang_IndexAction_dispose(p0 pointer #As("CXIndexAction")) void #Foreign("clang_IndexAction_dispose")
 :CXIndexOpt_None int = 0
 :CXIndexOpt_SuppressRedundantRefs int = 1
 :CXIndexOpt_IndexFunctionLocalSymbols int = 2
@@ -2079,9 +2079,9 @@ IndexerCallbacks struct {
 	indexDeclaration pointer
 	indexEntityReference pointer
 }
-clang_indexSourceFile(p0 pointer, client_data pointer, index_callbacks *IndexerCallbacks #As("IndexerCallbacks *"), index_callbacks_size uint, index_options uint, source_filename *sbyte, command_line_args **sbyte, num_command_line_args int, unsaved_files *CXUnsavedFile #As("struct CXUnsavedFile *"), num_unsaved_files uint, out_TU *pointer #As("CXTranslationUnit *"), TU_options uint) int #Foreign("clang_indexSourceFile")
-clang_indexSourceFileFullArgv(p0 pointer, client_data pointer, index_callbacks *IndexerCallbacks #As("IndexerCallbacks *"), index_callbacks_size uint, index_options uint, source_filename *sbyte, command_line_args **sbyte, num_command_line_args int, unsaved_files *CXUnsavedFile #As("struct CXUnsavedFile *"), num_unsaved_files uint, out_TU *pointer #As("CXTranslationUnit *"), TU_options uint) int #Foreign("clang_indexSourceFileFullArgv")
-clang_indexTranslationUnit(p0 pointer, client_data pointer, index_callbacks *IndexerCallbacks #As("IndexerCallbacks *"), index_callbacks_size uint, index_options uint, p5 pointer #As("CXTranslationUnit")) int #Foreign("clang_indexTranslationUnit")
-clang_indexLoc_getFileLocation(loc CXIdxLoc #As("CXIdxLoc"), indexFile *pointer, file *pointer, line *uint, column *uint, offset *uint) void #Foreign("clang_indexLoc_getFileLocation")
+clang_indexSourceFile(p0 pointer #As("CXIndexAction"), client_data pointer #As("CXClientData"), index_callbacks *IndexerCallbacks #As("IndexerCallbacks *"), index_callbacks_size uint, index_options uint, source_filename *sbyte, command_line_args **sbyte, num_command_line_args int, unsaved_files *CXUnsavedFile #As("struct CXUnsavedFile *"), num_unsaved_files uint, out_TU *pointer #As("CXTranslationUnit *"), TU_options uint) int #Foreign("clang_indexSourceFile")
+clang_indexSourceFileFullArgv(p0 pointer #As("CXIndexAction"), client_data pointer #As("CXClientData"), index_callbacks *IndexerCallbacks #As("IndexerCallbacks *"), index_callbacks_size uint, index_options uint, source_filename *sbyte, command_line_args **sbyte, num_command_line_args int, unsaved_files *CXUnsavedFile #As("struct CXUnsavedFile *"), num_unsaved_files uint, out_TU *pointer #As("CXTranslationUnit *"), TU_options uint) int #Foreign("clang_indexSourceFileFullArgv")
+clang_indexTranslationUnit(p0 pointer #As("CXIndexAction"), client_data pointer #As("CXClientData"), index_callbacks *IndexerCallbacks #As("IndexerCallbacks *"), index_callbacks_size uint, index_options uint, p5 pointer #As("CXTranslationUnit")) int #Foreign("clang_indexTranslationUnit")
+clang_indexLoc_getFileLocation(loc CXIdxLoc #As("CXIdxLoc"), indexFile *pointer #As("CXIdxClientFile *"), file *pointer #As("CXFile *"), line *uint, column *uint, offset *uint) void #Foreign("clang_indexLoc_getFileLocation")
 clang_indexLoc_getCXSourceLocation(loc CXIdxLoc #As("CXIdxLoc")) CXSourceLocation #As("CXSourceLocation") #Foreign("clang_indexLoc_getCXSourceLocation")
-clang_Type_visitFields(T CXType #As("CXType"), visitor pointer #As("CXFieldVisitor"), client_data pointer) uint #Foreign("clang_Type_visitFields")
+clang_Type_visitFields(T CXType #As("CXType"), visitor pointer #As("CXFieldVisitor"), client_data pointer #As("CXClientData")) uint #Foreign("clang_Type_visitFields")
