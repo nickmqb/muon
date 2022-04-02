@@ -337,10 +337,6 @@ float {
 		}
 		return 0
 	}
-
-	writeTo(val float, sb StringBuilder) {
-		double.writeTo(val, sb)
-	}
 }
 
 double {
@@ -355,17 +351,6 @@ double {
 			return 1
 		}
 		return 0
-	}
-
-	snprintf_(str pointer #As("char *"), size usize, format cstring) int #Foreign("snprintf") #VarArgs
-	
-	writeTo(val double, sb StringBuilder) {
-		max := 64
-		sb.reserveForWrite(max)
-		// TODO: we probably want a locale independent way to convert floating point numbers
-		size := snprintf_(sb.dataPtr + sb.count, cast(max, uint), "%.17g", val)
-		assert(0 < size && size < max)
-		sb.count += size
 	}
 }
 
