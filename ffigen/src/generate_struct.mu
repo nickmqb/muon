@@ -33,7 +33,7 @@ ValidationContext struct #RefType {
 	offsets List<StructOffset>
 	outerStructType CXType
 	cprefix string
-	coffset long
+	coffset Maybe<long>
 
 	clone(vc ValidationContext) {
 		offsets := new List<StructOffset>{}
@@ -167,8 +167,8 @@ mapStructFieldWithName(name string, cname string, type CXType, ctx *MapStructCon
 		numElements := clang_getNumElements(type)
 		for i := 0_L; i < numElements {			
 			prev := ctx.vc.coffset
-			ctx.vc.coffset += getSizeOfTypeInBytes(elementType) * i
-			mapStructFieldWithName(format("{}_{}", name, i), name, elementType, ctx)
+			ctx.vc.coffset = Maybe.from(ctx.vc.coffset.value + getSizeOfTypeInBytes(elementType) * i)
+			mapStructFieldWithName(format("{}_{}", name, i), cname, elementType, ctx)
 			ctx.vc.coffset = prev
 		}
 		return
@@ -183,6 +183,13 @@ mapStructFieldWithName(name string, cname string, type CXType, ctx *MapStructCon
 
 	typename := ""
 	if clang_Cursor_isAnonymous(clang_getTypeDeclaration(type)) != 0 {
+		if ctx.vc.coffset.hasValue {
+			rb.write("\t")
+			rb.write(name)
+			rb.write(" FFIGEN_INVALID_NESTED_ANONYMOUS_STRUCT\n")
+			return
+		}
+
 		ctx.state.anonymousStructs.add(type)
 		typename = format("{}_Anonymous{}", ctx.structName, ctx.nestedID)
 		ctx.nestedID += 1	
@@ -190,7 +197,7 @@ mapStructFieldWithName(name string, cname string, type CXType, ctx *MapStructCon
 		vc := new ctx.vc.clone()
 		vc.offsets.add(StructOffset { structName: ctx.structName, fieldName: name })
 		if hasName {
-			vc.cprefix = format("{}{}.", vc.cprefix, name)
+			vc.cprefix = format("{}{}.", vc.cprefix, cname)
 		}
 		genStruct(ctx.state, typename, type, ctx.flags, vc)
 	} else {
@@ -282,9 +289,9 @@ validateField(s AppState, muStructName string, muName string, cname string, vc V
 	sb.write(vc.cprefix)
 	sb.write(cname)
 	sb.write(")")
-	if vc.coffset != 0 {
+	if vc.coffset.hasValue {
 		sb.write(" + ")
-		vc.coffset.writeTo(sb)
+		vc.coffset.value.writeTo(sb)
 	}
 	sb.write(", \"Field validation error\");\n")
 
