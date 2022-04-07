@@ -94,7 +94,6 @@ CGenerator {
 		c.out.writeLine("typedef float float__;")
 		c.out.writeLine("typedef double double__;")
 		c.out.writeLine("typedef uint8_t bool__;")
-		c.out.writeLine("typedef uint32_t bool32__;")
 		c.out.writeLine("typedef char char__;")
 		c.out.writeLine("typedef uint8_t* pointer__;")
 		c.out.writeLine("typedef struct { pointer__ dataPtr__; int__ length__; } string__;")

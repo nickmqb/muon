@@ -43,9 +43,6 @@ double {
 bool {
 }
 
-bool32 {
-}
-
 char {
 }
 

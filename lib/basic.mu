@@ -368,20 +368,6 @@ bool {
 	}
 }
 
-bool32 {
-	hash(val bool32) {
-		return transmute(val, uint)
-	}
-
-	writeTo(val bool32, sb StringBuilder) {
-		if val {
-			sb.write("true")
-		} else {
-			sb.write("false")
-		}
-	}
-}
-
 char {
 	hash(ch char) {
 		return transmute(ch, uint)

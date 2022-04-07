@@ -99,7 +99,6 @@ CommonTags struct #RefType {
 	float_ Tag
 	double_ Tag
 	bool_ Tag
-	bool32_ Tag
 	char_ Tag
 	string_ Tag
 	cstring_ Tag
@@ -745,7 +744,6 @@ TypeCheckerFirstPass {
 		tags.float_ = getCoreTypeTag(c, "float")
 		tags.double_ = getCoreTypeTag(c, "double")
 		tags.bool_ = getCoreTypeTag(c, "bool")
-		tags.bool32_ = getCoreTypeTag(c, "bool32")
 		tags.char_ = getCoreTypeTag(c, "char")
 		
 		str := getTypeTi(c, "string")
@@ -899,8 +897,6 @@ TypeCheckerFirstPass {
 		tags.double_.ti.rank = 8
 		
 		tags.bool_.ti.flags = TypeFlags.boolval
-		
-		tags.bool32_.ti.flags = TypeFlags.boolval
 		
 		tags.char_.ti.flags = TypeFlags.char_
 		

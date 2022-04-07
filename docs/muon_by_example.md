@@ -80,7 +80,6 @@ Type | Description
 `float` | 32-bit floating point number
 `double` | 64-bit floating point number
 `bool` | 8-bit boolean
-`bool32` | 32-bit boolean
 `char` | 8-bit character
 `pointer` | raw pointer, 32-bit or 64-bit, depending on bitsize of target architecture
 `*T` | pointer to a value of some type T
