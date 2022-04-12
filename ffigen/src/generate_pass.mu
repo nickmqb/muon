@@ -80,7 +80,7 @@ mapSymbol(s AppState, name string, kind SymbolKind, force bool) {
 	}
 	flags := cast(0, MapFlags)
 	if rule != null {
-		if kind == SymbolKind.function && rule.prefer_cstring {
+		if (kind == SymbolKind.function || kind == SymbolKind.struct_) && rule.prefer_cstring {
 			flags |= MapFlags.prefer_cstring
 		}		
 	}

@@ -80,6 +80,12 @@ parseRule(text string, line int, errors List<RuleParseError>) {
 			token = readToken(si)
 		}
 	}
+	if rule.symbolKind == SymbolKind.struct_ {
+		if token == "prefer_cstring" {
+			rule.prefer_cstring = true
+			token = readToken(si)
+		}
+	}	
 	if rule.symbolKind == SymbolKind.const {
 		if token == "cast" {
 			rule.useCast = true
