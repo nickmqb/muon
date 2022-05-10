@@ -263,7 +263,11 @@ TypeChecker {
 	}
 	
 	tryUnifyNumbers(t CommonTags, a Tag, ax Node, b Tag, bx Node) {
-		if (a.ti.flags & TypeFlags.floatval) != 0 || (b.ti.flags & TypeFlags.floatval) != 0 {
+		af := (a.ti.flags & TypeFlags.floatval) != 0
+		ai := (a.ti.flags & TypeFlags.intval) != 0
+		bf := (b.ti.flags & TypeFlags.floatval) != 0
+		bi := (b.ti.flags & TypeFlags.intval) != 0
+		if (af && bf) || (ai && bf) || (af && bi) {
 			return (a.ti == t.double_.ti || b.ti == t.double_.ti) ? t.double_ : t.float_
 		}
 		return tryUnifyIntvals(t, a, ax, b, bx)
