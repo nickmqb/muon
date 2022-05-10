@@ -337,6 +337,11 @@ float {
 		}
 		return 0
 	}
+
+	isInfinityOrNaN(a float) {
+		bits := transmute(a, uint)
+		return (bits & 0x7f800000_u) == 0x7f800000_u
+	}
 }
 
 double {
