@@ -257,6 +257,21 @@ Tag struct {
 	}
 }
 
+EvalResult struct {
+	tag Tag
+	opaqueValue ulong
+	type EvalResultType
+}
+
+EvalResultType enum {
+	value
+	defaultValue
+	failed
+	generateVar
+	generateDefine
+	generateForeign
+}
+
 TypeCheckerFirstPass {
 	createContext(comp Compilation) {
 		builtins := new Map.create<string, FunctionDef>()

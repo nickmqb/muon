@@ -1,18 +1,3 @@
-EvalResult struct {
-	tag Tag
-	opaqueValue ulong
-	type EvalResultType
-}
-
-EvalResultType enum {
-	value
-	defaultValue
-	failed
-	generateVar
-	generateDefine
-	generateForeign
-}
-
 Interpreter {
 	computeStaticField(c GenerateContext, sf StaticFieldDef) {
 		if (sf.flags & StaticFieldFlags.evaluated) != 0 {
