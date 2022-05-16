@@ -1,15 +1,28 @@
 float {
 	writeTo(val float, sb StringBuilder) {
-		double.writeTo(val, sb)
+		writeTo_formatted(val, sb, "%.9g")
+	}
+
+	writeTo_formatted(val double, sb StringBuilder, formatString cstring) {
+		max := 64
+		sb.reserveForWrite(max)
+		// TODO: we probably want a locale independent way to convert floating point numbers
+		size := double.snprintf_(sb.dataPtr + sb.count, cast(max, uint), formatString, val)
+		assert(0 < size && size < max)
+		sb.count += size
 	}
 }
 
 double {
 	writeTo(val double, sb StringBuilder) {
+		writeTo_formatted(val, sb, "%.17g")
+	}
+
+	writeTo_formatted(val double, sb StringBuilder, formatString cstring) {
 		max := 64
 		sb.reserveForWrite(max)
 		// TODO: we probably want a locale independent way to convert floating point numbers
-		size := snprintf_(sb.dataPtr + sb.count, cast(max, uint), "%.17g", val)
+		size := snprintf_(sb.dataPtr + sb.count, cast(max, uint), formatString, val)
 		assert(0 < size && size < max)
 		sb.count += size
 	}
